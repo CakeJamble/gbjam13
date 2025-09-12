@@ -1,6 +1,9 @@
 local Game = {}
 
 function Game:init()
+	local songPath = "asset/audio/castle_lololo.mp3"
+	self.music = love.audio.newSource(songPath, "stream")
+	self.music:play()
 end;
 
 ---@param previous table Previously active State
@@ -12,6 +15,13 @@ end;
 ---@param button string
 function Game:gamepadpressed(joystick, button)
 	if button == 'a' then
+		self.showText = not self.showText
+	end
+end;
+
+---@param key string
+function Game:keypressed(key)
+	if key == 'z' then
 		self.showText = not self.showText
 	end
 end;
