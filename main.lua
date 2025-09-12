@@ -32,6 +32,9 @@ function love.load(args)
 		resizable = true
 	})
 
+	----- Game Mechanics
+	Gravity = 500
+
 	----- Gamestates
 	States = {
 		MainMenu = require('gamestate.MainMenu'),
