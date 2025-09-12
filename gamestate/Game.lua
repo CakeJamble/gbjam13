@@ -1,6 +1,6 @@
 local bump = require('lib.bump')
 local map = require('map.map_example')
-local Entity = require('class.Entity')
+local Player = require('class.Player')
 local Game = {}
 
 function Game:init()
@@ -23,30 +23,14 @@ function Game:enter(previous)
 			"idle", "walk", "jump", -- "shoot", ...
 		}
 	}
-	self.player = Entity(playerData)
-	local tileSize = 16
-	self.world = bump.newWorld(tileSize)
-	self.world:add(self.player, self.player.pos.x, self.player.pos.y,
-		self.player.dims.w, self.player.dims.h)
 
-	self:buildWorldCollision(tileSize)
-end;
+	self.player = Player(playerData)
 
----@param tileSize integer
-function Game:buildWorldCollision(tileSize)
-	for row=1, #map do
-		for col=1, #map[row] do
-			if map[row][col] == 1 then
-				local block = {
-					x = (col - 1) * tileSize,
-					y = (row - 1) * tileSize,
-					w = tileSize,
-					h = tileSize
-				}
-				self.world:add(block, block.x, block.y, block.w, block.h)
-			end
-		end
-	end
+-- For when we have tiles and gravity ready to implement
+	-- local tileSize = 16
+	-- self.world = bump.newWorld(tileSize)
+	-- self.world:add(self.player, self.player.pos.x, self.player.pos.y,
+	-- 	self.player.dims.w, self.player.dims.h)
 end;
 
 ---@param joystick string
@@ -71,7 +55,7 @@ end;
 
 function Game:draw()
 	self.player:draw()
-	
+
 	if self.showText then
 		love.graphics.print("GBJam13")
 	end

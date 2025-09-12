@@ -50,3 +50,5 @@ function Player:drawSprite()
 	spriteNum = math.min(spriteNum, #animation.quads)
 	love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], self.pos.x, self.pos.y)
 end;
+
+return Player
