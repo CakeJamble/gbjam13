@@ -35,6 +35,13 @@ Imported libraries. See Libraries above for documentation.
 
 Tilemaps for levels
 
+#### Tilemap Keys
+
+The collision for these tiles use AABB collision.
+
+`1`: Solid - Usually the ground or the wall
+`2`: Spike - Tile that inflicts damage or kills the player on contact
+
 ### `util`
 
 Helper functions and libraries

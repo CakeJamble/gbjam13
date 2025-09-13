@@ -1,0 +1,82 @@
+local createAnimation = require('util.create_animation')
+local flux = require('lib.flux')
+local Entity = require('class.Entity')
+local Timer = require('lib.hump.timer')
+local Class = require('lib.hump.class')
+local Projectile = require('class.Projectile')
+
+---@class Calendar: Entity
+local Calendar = Class{__includes = Entity}
+
+function Calendar:init(data)
+	Entity.init(self, data)
+	self.startingPosition = {x = data.x, y = data.y}
+	self.projectiles = {}
+	Timer.every(3, function() self:shoot() end)
+
+	local image = love.graphics.newImage('asset/sprite/enemy/calendar.png')
+	local sprite = createAnimation(image, 32, 32)
+	sprite.loop = true
+	self.animations.idle = sprite
+	self.solid = true
+	self.damage = data.damage or 1
+	self.amplitude = 25
+
+	self:tweenUp()
+end;
+
+---@param player Player
+function Calendar:onCollision(player)
+	player:takeDamage(self.damage)
+end;
+
+
+function Calendar:shoot()
+	local data = {
+		x = self.pos.x - self.dims.w,
+		y = self.pos.y,
+		w = 16,
+		h = 16,
+		speed = -200,
+		damage = 1
+	}
+	local projectile = Projectile(data)
+	World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
+	table.insert(self.projectiles, projectile)
+end;
+
+function Calendar:tweenUp(dur)
+	local duration = dur or 2
+	flux.to(self.pos, duration, {y = self.startingPosition.y - self.amplitude})
+		:ease("sineinout")
+		:oncomplete(function() self:tweenDown(duration) end)
+end;
+
+function Calendar:tweenDown(duration)
+	flux.to(self.pos, duration, {y = self.startingPosition.y + self.amplitude})
+		:ease("sineinout")
+		:oncomplete(function() self:tweenUp(duration) end)
+end;
+
+---@param dt number
+function Calendar:update(dt)
+	Entity.update(self, dt)
+	flux.update(dt)
+	Timer.update(dt)
+	for i,projectile in ipairs(self.projectiles) do
+		projectile:update(dt)
+		if not projectile.active then
+			table.remove(self.projectiles, i)
+			World:remove(projectile)
+		end
+	end
+end;
+
+function Calendar:draw()
+	Entity.draw(self)
+	for _,projectile in ipairs(self.projectiles) do
+		projectile:draw()
+	end
+end;
+
+return Calendar
