@@ -6,7 +6,6 @@ local Player = require('class.Player')
 local Camera = require('lib.hump.camera')
 local imgui = require('lib.cimgui')
 local ffi = require('ffi')
-local showDebug = false
 local hitboxCheckboxState = ffi.new("bool[1]", false)
 local zoomValue = ffi.new("int[1]", 4)
 
@@ -20,7 +19,7 @@ function Game:init()
 	local songPath = "asset/audio/casino.mp3"
 	self.music = love.audio.newSource(songPath, "stream")
 	self.music:play()
-
+	self.showDebug = false
 	self.player = self:loadPlayer()
 	Gravity = 500
 	self.zoomValue = 4
@@ -122,9 +121,7 @@ end;
 
 ---@param key string
 function Game:keypressed(key)
-	if key == 'z' then
-		self.showText = not self.showText
-	elseif key == '`' then
+	if key == '`' then
 		self.showDebug = not self.showDebug
 	end
 end;
