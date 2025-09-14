@@ -52,6 +52,7 @@ General purpose functions, such as the loading or creation of animations, enemie
 The collision for these tiles use AABB collision.
 
 `1`: Solid - Usually the ground or the wall
+
 `2`: Spike - Tile that inflicts damage or kills the player on contact
 
 ### `util`
