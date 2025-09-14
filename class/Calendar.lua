@@ -21,8 +21,10 @@ function Calendar:init(data)
 	self.solid = true
 	self.damage = data.damage or 1
 	self.amplitude = 25
-
+	self.baseY = data.y
+	self.offsetY = 0
 	self:tweenUp()
+	self.spriteOffsets = {x = 16, y = 16}
 end;
 
 ---@param player Player
@@ -47,13 +49,13 @@ end;
 
 function Calendar:tweenUp(dur)
 	local duration = dur or 2
-	flux.to(self.pos, duration, {y = self.startingPosition.y - self.amplitude})
+	flux.to(self, duration, {offsetY = -self.amplitude})
 		:ease("sineinout")
 		:oncomplete(function() self:tweenDown(duration) end)
 end;
 
 function Calendar:tweenDown(duration)
-	flux.to(self.pos, duration, {y = self.startingPosition.y + self.amplitude})
+	flux.to(self, duration, {offsetY = self.amplitude})
 		:ease("sineinout")
 		:oncomplete(function() self:tweenUp(duration) end)
 end;
@@ -63,6 +65,12 @@ function Calendar:update(dt)
 	Entity.update(self, dt)
 	flux.update(dt)
 	Timer.update(dt)
+
+	local goalX = self.pos.x
+	local goalY = self.baseY + self.offsetY
+	local actualX, actualY, cols, len = World:move(self, goalX, goalY)
+	self.pos.x, self.pos.y = actualX, actualY
+
 	for i,projectile in ipairs(self.projectiles) do
 		projectile:update(dt)
 		if not projectile.active then
@@ -73,7 +81,7 @@ function Calendar:update(dt)
 end;
 
 function Calendar:draw()
-	Entity.draw(self)
+	Entity.drawSprite(self, self.spriteOffsets)
 	for _,projectile in ipairs(self.projectiles) do
 		projectile:draw()
 	end

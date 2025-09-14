@@ -49,11 +49,12 @@ function Entity:draw()
   self:drawSprite()
 end;
 
-function Entity:drawSprite()
+function Entity:drawSprite(spriteOffsets)
+  local xOff, yOff = spriteOffsets.x, spriteOffsets.y
   local animation = self.animations[self.currentAnimationTag]
   local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
   spriteNum = math.min(spriteNum, #animation.quads)
-  local transform = love.math.newTransform(self.pos.x, self.pos.y + (32 - 24), 0, self.facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
+  local transform = love.math.newTransform(self.pos.x + (32 - xOff), self.pos.y + (32 - yOff), 0, self.facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
   love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
 end;
 

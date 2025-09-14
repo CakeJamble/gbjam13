@@ -3,6 +3,7 @@ local loadMaps = require('util.map_loader')
 local loadEnemies = require('util.enemy_loader')
 local tileRegistry = require('level.tile_registry')
 local Player = require('class.Player')
+local Camera = require('lib.hump.camera')
 local Game = {}
 
 function Game:init()
@@ -15,6 +16,7 @@ function Game:init()
 
 	self.player = self:loadPlayer()
 	Gravity = 500
+	camera = Camera(self.player.pos.x - self.tileSize, self.player.pos.y, 4)
 end;
 
 ---@param previous table Previously active State
@@ -24,6 +26,7 @@ function Game:enter(previous)
 	World = bump.newWorld(self.tileSize)
 	self.level = self.loadLevel(tileMap, self.tileSize)
 	self.addToWorld(self.player, self.enemies, self.level)
+	camera:lockPosition(self.player.pos.x, self.player.pos.y)
 end;
 
 ---@return Player
@@ -125,17 +128,22 @@ function Game:update(dt)
 	if self.player.health == 0 then
 		self:reset()
 	end
+
+	local dx,dy = self.player.pos.x - camera.x, self.player.pos.y - camera.y
+	camera:move(dx, dy)
 end;
 
 function Game:draw()
 	-- shove.beginDraw()
-
+	camera:attach()
 	self.player:draw()
 	self:drawTiles()
 	for _,enemy in ipairs(self.enemies) do
 		enemy:draw()
 	end
 
+	self:drawCollision()
+	camera:detach()
 	local hp = tostring(self.player.health)
 	love.graphics.print(hp, 10, 10)
 	-- shove.endDraw()
@@ -145,6 +153,15 @@ function Game:drawTiles()
 	for _,tile in ipairs(self.level) do
 		tile:draw()
 	end
+end;
+
+function Game:drawCollision()
+	love.graphics.setColor(1, 0, 0, 0.5)
+	for _,item in ipairs(World:getItems()) do
+		local x, y, w, h = World:getRect(item)
+		love.graphics.rectangle("line", x, y, w, h)
+	end
+	love.graphics.setColor(1,1,1,1)
 end;
 
 return Game

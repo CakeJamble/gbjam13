@@ -51,7 +51,7 @@ function Projectile:draw()
 		love.graphics.draw(self.image, self.pos.x, self.pos.y)
 	else
 		love.graphics.setColor(1,0,0)
-		love.graphics.circle("fill", self.pos.x, self.pos.y, self.dims.w / 2)
+		love.graphics.circle("fill", self.pos.x + 8, self.pos.y + 8, self.dims.w / 2)
 		love.graphics.setColor(1,1,1)
 	end
 end;
