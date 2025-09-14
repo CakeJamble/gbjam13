@@ -12,7 +12,7 @@ function Solid:init(data)
 end;
 
 function Solid:draw()
-	love.graphics.draw(Solid.sprite, self.x, self.y)
+	love.graphics.draw(Solid.sprite, self.pos.x, self.pos.y)
 end;
 
 return Solid

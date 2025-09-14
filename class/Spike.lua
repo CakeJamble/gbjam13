@@ -17,7 +17,7 @@ function Spike:onCollision(player)
 end;
 
 function Spike:draw()
-	love.graphics.draw(Spike.sprite, self.x, self.y)
+	love.graphics.draw(Spike.sprite, self.pos.x, self.pos.y)
 end;
 
 return Spike

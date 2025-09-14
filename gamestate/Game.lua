@@ -23,7 +23,8 @@ function Game:init()
 	self.player = self:loadPlayer()
 	Gravity = 500
 	self.zoomValue = 4
-	camera = Camera(self.player.pos.x - self.tileSize, self.player.pos.y, self.zoomValue)
+	camera = Camera(self.player.pos.x, self.player.pos.y, self.zoomValue)
+	self.numVisible = 0
 end;
 
 ---@param previous table Previously active State
@@ -64,7 +65,7 @@ function Game.addToWorld(player, enemies, level)
 	end
 
 	for _,tile in ipairs(level) do
-		World:add(tile, tile.x, tile.y, tile.w, tile.h)
+		World:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
 	end
 end;
 
@@ -126,11 +127,47 @@ function Game:keypressed(key)
 	end
 end;
 
+function Game:isInView(obj, viewport)
+  local x = obj.pos.x or obj.x
+  local y = obj.pos.y or obj.y
+  local w = obj.dims.w or obj.w
+  local h = obj.dims.h or obj.h
+  return not (
+    x + w < viewport.x or
+    x > viewport.x + viewport.width or
+    y + h < viewport.y or
+    y > viewport.y + viewport.height
+  )
+end;
+
+function Game:countVisibleObj()
+	local x, y, width, height = shove.getViewport()
+	local view = {x=x,y=y,width=width,height=height}
+	local count = 0
+
+	for _,item in ipairs(World:getItems()) do
+		if self:isInView(item, view) then
+			count = count + 1
+		end
+	end
+	return count
+end;
+
 ---@param dt number
 function Game:update(dt)
-	self.player:update(dt)
+	-- self.numVisible = self:countVisibleObj()
+	-- local x,y = camera:cameraCoords()
+	-- local w,h = shove.getViewportDimensions()
+	-- local visible = World:queryRect(x,y,w,h)
+	-- local slowdown = math.max(0.5, 1 - self.numVisible / 10)
+	-- local x,y = camera:position()
+	-- local px,py = self.player.pos.x, self.player.pos.y
+	-- print(x, y, px, py)
+	local slowdown = 1
+	local delta = dt * slowdown
+	self.player:update(delta)
 	for _,enemy in ipairs(self.enemies) do
-		enemy:update(dt)
+		enemy:update(delta)
 	end
 	if self.player.health == 0 then
 		self:reset()
@@ -176,6 +213,8 @@ function Game:draw()
 	camera:detach()
 	local hp = tostring(self.player.health)
 	love.graphics.print(hp, 10, 10)
+	local numVis = tostring(self.numVisible)
+	love.graphics.print(numVis, 15, 20)
 	-- shove.endDraw()
 	imgui.Render()
 	imgui.love.RenderDrawLists()
