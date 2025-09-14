@@ -1,5 +1,7 @@
 Gamestate = require('lib.hump.gamestate')
 shove = require('lib.shove')
+Text = require('lib.sysl-text.slog-text')
+Frame = require('lib.sysl-text.slog-frame')
 
 ---@param args string[]
 ---@return integer
@@ -31,6 +33,24 @@ function love.load(args)
 	shove.setWindowMode(WindowWidth, WindowHeight, {
 		resizable = true
 	})
+
+	----- Text Boxes & Frames
+	images = {}
+	images.frame = {}
+	images.frame.eb_8 = love.graphics.newImage('asset/sprite/frame/eb_8.png')
+	Text.configure.image_table("images")
+	Frame.load()
+	Audio = {}
+	Audio.text = {}
+	Audio.text.default = love.audio.newSource('asset/audio/text/default.ogg', "static")
+	Text.configure.audio_table("Audio")
+	Text.configure.add_text_sound(Audio.text.default, 0.75)
+	Fonts = {
+		golden_apple = love.graphics.newFont("asset/font/golden_apple.fnt", "asset/font/golden_apple.png"),
+		comic_neue_small = love.graphics.newFont("asset/font/comic_neue_13.ttf", 11, "mono")
+	}
+
+	love.graphics.setFont(Fonts.golden_apple)
 
 	----- Game Mechanics
 	Gravity = 500
