@@ -4,9 +4,16 @@ local loadEnemies = require('util.enemy_loader')
 local tileRegistry = require('level.tile_registry')
 local Player = require('class.Player')
 local Camera = require('lib.hump.camera')
+local imgui = require('lib.cimgui')
+local ffi = require('ffi')
+local showDebug = false
+local hitboxCheckboxState = ffi.new("bool[1]", false)
+local zoomValue = ffi.new("int[1]", 4)
+
 local Game = {}
 
 function Game:init()
+	imgui.love.Init()
 	self.maps = loadMaps()
 	self.levelIndex = 1
 	self.tileSize = 16
@@ -16,7 +23,8 @@ function Game:init()
 
 	self.player = self:loadPlayer()
 	Gravity = 500
-	camera = Camera(self.player.pos.x - self.tileSize, self.player.pos.y, 4)
+	self.zoomValue = 4
+	camera = Camera(self.player.pos.x - self.tileSize, self.player.pos.y, self.zoomValue)
 end;
 
 ---@param previous table Previously active State
@@ -116,6 +124,8 @@ end;
 function Game:keypressed(key)
 	if key == 'z' then
 		self.showText = not self.showText
+	elseif key == '`' then
+		self.showDebug = not self.showDebug
 	end
 end;
 
@@ -131,6 +141,27 @@ function Game:update(dt)
 
 	local dx,dy = self.player.pos.x - camera.x, self.player.pos.y - camera.y
 	camera:move(dx, dy)
+
+	-- imgui debug stuff
+	imgui.love.Update(dt)
+	imgui.NewFrame()
+
+	if self.showDebug then
+		imgui.Begin("Debug Window")
+
+		if imgui.Checkbox("Show Hitboxes", hitboxCheckboxState) then
+			self.drawHitboxes = hitboxCheckboxState[0]
+		end
+
+		if imgui.InputInt("Zoom", zoomValue) then
+			self.zoomValue = math.max(1, zoomValue[0])
+			zoomValue[0] = self.zoomValue
+			camera:zoomTo(self.zoomValue)
+			camera:lockPosition(self.player.pos.x, self.player.pos.y)
+		end
+
+		imgui.End()
+	end
 end;
 
 function Game:draw()
@@ -142,11 +173,15 @@ function Game:draw()
 		enemy:draw()
 	end
 
-	self:drawCollision()
+	if self.drawHitboxes then
+		self:drawCollision()
+	end
 	camera:detach()
 	local hp = tostring(self.player.health)
 	love.graphics.print(hp, 10, 10)
 	-- shove.endDraw()
+	imgui.Render()
+	imgui.love.RenderDrawLists()
 end;
 
 function Game:drawTiles()
@@ -163,5 +198,38 @@ function Game:drawCollision()
 	end
 	love.graphics.setColor(1,1,1,1)
 end;
+
+---- imgui callbacks
+---@param x number
+---@param y number
+---@param dx number
+---@param dy number
+---@param istouch boolean
+function Game:mousemoved(x, y, dx, dy, istouch)
+  imgui.love.MouseMoved(x, y)
+end;
+
+---@param x number
+---@param y number
+---@param button string
+---@param istouch boolean
+---@param presses number
+function Game:mousepressed(x, y, button, istouch, presses)
+  imgui.love.MousePressed(button)
+end;
+
+---@param x number
+---@param y number
+---@param button string
+---@param istouch boolean
+---@param presses number
+function Game:mousereleased(x, y, button, istouch, presses)
+  imgui.love.MouseReleased(button)
+end;
+
+function Game:quit()
+	imgui.love.Shutdown()
+end;
+
 
 return Game
