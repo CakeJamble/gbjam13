@@ -1,5 +1,7 @@
 # gbjam13
 
+Made with [LÖVE](https://love2d.org/)❣️
+
 ## Libraries
 
 - [hump](https://hump.readthedocs.io/en/latest/)
