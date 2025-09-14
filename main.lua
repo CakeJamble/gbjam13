@@ -21,7 +21,8 @@ end;
 
 ---@param args string[]
 function love.load(args)
-	----- Screen Resolution
+	----- Screen
+	love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
 	shove.setResolution(160, 144, {
 		fitMethod = "pixel",
 		renderMode = "direct" -- change to "layer" if you want to use drawing layers
