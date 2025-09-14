@@ -6,6 +6,8 @@
 - [flux](https://github.com/rxi/flux)
 - [shove](https://github.com/Oval-Tutu/shove)
 - [bump](https://github.com/kikito/bump.lua)
+- [SYSL-Text](https://github.com/sysl-dev/SYSL-Text)
+- [cimgui-love](https://codeberg.org/apicici/cimgui-love)
 
 ## Repo Structure
 
@@ -13,11 +15,15 @@
 
 #### `audio`
 
-Place Music and SFX here.
+Place Music and SFX here. A separate `text` subdir is also here for textboxes and frames used by `SYSL-Text`
 
 #### `sprite`
 
 Place sprite sheets here. Sprite sheets are sliced into quads for animations in `util/create_animation.lua`
+
+#### `font`
+
+Font assets used in game
 
 ### `class`
 
@@ -27,13 +33,17 @@ Files for OOP classes using `hump.class`.
 
 Files for Gamestates dictates by `States` in `main.lua`. Uses `hump.gamestate`.
 
+### `level`
+
+Level tilemaps and enemy placements in each level
+
 ### `lib`
 
 Imported libraries. See Libraries above for documentation.
 
-### `map`
+### `util`
 
-Tilemaps for levels
+General purpose functions, such as the loading or creation of animations, enemies, and maps from other source/asset files.
 
 #### Tilemap Keys
 
