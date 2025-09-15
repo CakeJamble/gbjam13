@@ -20,7 +20,9 @@ end;
 
 ---@param other Entity
 function Projectile:onCollision(other)
-	other:takeDamage(self.damage)
+	if not other == self.owner then
+		other:takeDamage(self.damage)
+	end
 end;
 
 ---@param dt number
@@ -32,7 +34,7 @@ function Projectile:update(dt)
 	if World then
 		local actualX, actualY, cols, len = World:move(self, goalX, goalY,
 			function(item, other)
-				if other.owner == item then
+				if other == item.owner then
 					return nil
 				end
 				if other.solid then

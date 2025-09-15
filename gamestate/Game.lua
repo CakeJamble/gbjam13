@@ -43,12 +43,7 @@ function Game:loadPlayer()
 	local col, row = 5, 6
 	local x = (col - 1) * self.tileSize
 	local y = (row - 1) * self.tileSize
-	local gun = Gun({
-		x=x,y=y,
-		w = 25, h = 18,
-		damage=1,
-		speed={x=200,y=200}
-	})
+
 	local playerData = {
 		name = "player",
 		x = x, y = y,
@@ -58,8 +53,16 @@ function Game:loadPlayer()
 		},
 		gun=gun
 	}
-
-	return Player(playerData)
+	local player = Player(playerData)
+	local startGun = Gun({
+		x=x,y=y,
+		w = 25, h = 18,
+		damage=1,
+		speed={x=200,y=200},
+		owner = player
+	})
+	player:setGun(startGun)
+	return player
 end;
 
 ---@param player Player

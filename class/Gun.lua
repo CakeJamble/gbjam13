@@ -13,7 +13,7 @@ function Gun:init(data)
 	self.dims = {w = data.w, h = data.h}
 	self.direction = {x=1,y=0}
 	self.isUnlucky = false
-	self.owner = nil
+	self.owner = data.owner
 end;
 
 function Gun:shoot(isUnlucky)

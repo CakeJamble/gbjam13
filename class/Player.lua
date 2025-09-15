@@ -9,8 +9,7 @@ local Player = Class{__includes = Entity}
 
 function Player:init(data)
 	Entity.init(self, data)
-	self.gun = data.gun
-	self.gun.owner = self
+	self.gun = nil
 	self.startingPosition = {x = data.x, y = data.y} -- copy for restart
 	self.onGround = false
 	self.wasOnGround = self.onGround
@@ -26,6 +25,10 @@ function Player:init(data)
 	self.jumpCount = 0
 	self.lookYOffset = {base = 0, curr = 0, max = 32, duration = 0.5}
 	self.lookTween = nil
+end;
+
+function Player:setGun(gun)
+	self.gun = gun
 end;
 
 function Player:takeDamage(amount)
