@@ -54,7 +54,7 @@ function Entity:drawSprite(spriteOffsets)
   local animation = self.animations[self.currentAnimationTag]
   local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
   spriteNum = math.min(spriteNum, #animation.quads)
-  local transform = love.math.newTransform(self.pos.x + (32 - xOff), self.pos.y + (32 - yOff), 0, self.facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
+  local transform = love.math.newTransform(self.pos.x + self.dims.w / 2, self.pos.y + self.dims.h / 2, 0, self.facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
   love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
 end;
 

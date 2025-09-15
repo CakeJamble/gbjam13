@@ -15,7 +15,7 @@ function Calendar:init(data)
 	Timer.every(3, function() self:shoot() end)
 
 	local image = love.graphics.newImage('asset/sprite/enemy/calendar.png')
-	local sprite = createAnimation(image, 32, 32)
+	local sprite = createAnimation(image, 16, 16)
 	sprite.loop = true
 	self.animations.idle = sprite
 	self.solid = true
@@ -39,11 +39,12 @@ end;
 function Calendar:shoot()
 	local data = {
 		x = self.pos.x - self.dims.w,
-		y = self.pos.y,
+		y = self.pos.y + self.dims.h/2,
 		w = 16,
-		h = 16,
+		h = 8,
 		speed = {x = -200, y = 0},
-		damage = 1
+		damage = 1,
+		spritePath = "asset/sprite/enemy/calendar_projectile.png"
 	}
 	local projectile = Projectile(data)
 	World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
