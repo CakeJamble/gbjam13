@@ -65,3 +65,10 @@ function love.load(args)
 	Gamestate.registerEvents()
 	Gamestate.switch(States["MainMenu"])
 end;
+
+function love.conf(t)
+	t.identity = "gbjam13"
+	t.version = "12.0"
+	t.console = false
+	t.window.title = "GBJam13"
+end;

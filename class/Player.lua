@@ -1,4 +1,5 @@
 local createAnimation = require('util.create_animation')
+local flux = require('lib.flux')
 local Entity = require('class.Entity')
 local Class = require('lib.hump.class')
 
@@ -20,6 +21,8 @@ function Player:init(data)
 	self.health = 3
 	self.maxJumps = 2
 	self.jumpCount = 0
+	self.lookYOffset = {base = 0, curr = 0, max = 32, duration = 0.5}
+	self.lookTween = nil
 end;
 
 function Player:takeDamage(amount)
@@ -49,17 +52,35 @@ function Player:initAnimations(dir, animations)
 	return result
 end;
 
+---@param key string base or max
+---@param flip integer? -1 or 1
+function Player:tweenCamera(key, flip)
+	if self.lookTween then self.lookTween:stop() end
+	local validFlip = flip or 1
+	self.lookTween = flux.to(self.lookYOffset, self.lookYOffset.duration, {curr = validFlip * self.lookYOffset[key]})
+end;
+
 ---@param joystick string
 ---@param button string
 function Player:gamepadpressed(joystick, button)
 	if button == 'dpleft' then
 		self.moveDir = -1
 		self.facing = -1
+		self:tweenCamera("base")
 		self.currentAnimationTag = "walk"
 	elseif button == 'dpright' then
 		self.moveDir = 1
 		self.facing = 1
+		self:tweenCamera("base")
 		self.currentAnimationTag = "walk"
+	elseif button == 'dpup' then
+		if self.moveDir == 0 then
+			self:tweenCamera("max", -1)
+		end
+	elseif button == 'dpdown' then
+		if self.moveDir == 0 then
+			self:tweenCamera("max", 1)
+		end
 	elseif button == 'a' then
 		self:jump()
 	end
@@ -71,6 +92,8 @@ function Player:gamepadreleased(joystick, button)
 	if button == 'dpleft' or button == 'dpright' then
 		self.moveDir = 0
 		self.currentAnimationTag = "idle"
+	elseif button == 'dpup' or button == 'dpdown' then
+		self:tweenCamera("base")
 	end
 end;
 

@@ -173,8 +173,11 @@ function Game:update(dt)
 		self:reset()
 	end
 
-	local dx,dy = self.player.pos.x - camera.x, self.player.pos.y - camera.y
-	camera:move(dx, dy)
+	-- local dx,dy = self.player.pos.x - camera.x, self.player.pos.y - camera.y
+	-- camera:move(dx, dy)
+
+	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
+	camera:lookAt(x, y)
 
 	-- imgui debug stuff
 	imgui.love.Update(dt)
