@@ -8,6 +8,7 @@ local imgui = require('lib.cimgui')
 local ffi = require('ffi')
 local hitboxCheckboxState = ffi.new("bool[1]", false)
 local zoomValue = ffi.new("int[1]", 4)
+local Gun = require('class.Gun')
 
 local Game = {}
 
@@ -42,13 +43,20 @@ function Game:loadPlayer()
 	local col, row = 5, 6
 	local x = (col - 1) * self.tileSize
 	local y = (row - 1) * self.tileSize
+	local gun = Gun({
+		x=x,y=y,
+		w = 25, h = 18,
+		damage=1,
+		speed={x=200,y=200}
+	})
 	local playerData = {
 		name = "player",
 		x = x, y = y,
 		w = 25, h = 24,
 		animations = {
 			"idle", "walk", "jump", -- "shoot", ...
-		}
+		},
+		gun=gun
 	}
 
 	return Player(playerData)
@@ -172,9 +180,6 @@ function Game:update(dt)
 	if self.player.health == 0 then
 		self:reset()
 	end
-
-	-- local dx,dy = self.player.pos.x - camera.x, self.player.pos.y - camera.y
-	-- camera:move(dx, dy)
 
 	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
 	camera:lookAt(x, y)

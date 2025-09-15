@@ -32,6 +32,9 @@ function Calendar:onCollision(player)
 	player:takeDamage(self.damage)
 end;
 
+function Calendar:takeDamage(amount)
+	self.health = self.health - 1
+end;
 
 function Calendar:shoot()
 	local data = {
@@ -39,7 +42,7 @@ function Calendar:shoot()
 		y = self.pos.y,
 		w = 16,
 		h = 16,
-		speed = -200,
+		speed = {x = -200, y = 0},
 		damage = 1
 	}
 	local projectile = Projectile(data)

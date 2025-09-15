@@ -1,6 +1,7 @@
 local createAnimation = require('util.create_animation')
 local flux = require('lib.flux')
 local Entity = require('class.Entity')
+local Gun = require('class.Gun')
 local Class = require('lib.hump.class')
 
 ---@class Player: Entity
@@ -8,6 +9,7 @@ local Player = Class{__includes = Entity}
 
 function Player:init(data)
 	Entity.init(self, data)
+	self.gun = data.gun
 	self.startingPosition = {x = data.x, y = data.y} -- copy for restart
 	self.onGround = false
 	self.wasOnGround = self.onGround
@@ -84,6 +86,8 @@ function Player:gamepadpressed(joystick, button)
 	elseif button == 'a' then
 		self:jump()
 	end
+
+	self.gun:gamepadpressed(joystick, button)
 end;
 
 ---@param joystick string
@@ -95,6 +99,8 @@ function Player:gamepadreleased(joystick, button)
 	elseif button == 'dpup' or button == 'dpdown' then
 		self:tweenCamera("base")
 	end
+
+	self.gun:gamepadreleased(joystick, button)
 end;
 
 function Player:jump()
@@ -110,6 +116,9 @@ function Player:update(dt)
 	Entity.update(self, dt)
 	local collisionInfo = self:updatePosition(dt)
 	self:handleCollision(collisionInfo)
+	self.gun.pos.x = self.pos.x
+	self.gun.pos.y = self.pos.y
+	self.gun:update(dt)
 end;
 
 ---@param dt number
@@ -173,6 +182,7 @@ end;
 
 function Player:draw()
 	self:drawSprite()
+	self.gun:draw()
 end;
 
 function Player:drawSprite()

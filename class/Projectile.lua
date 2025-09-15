@@ -6,7 +6,7 @@ local Projectile = Class{}
 ---@param data table
 function Projectile:init(data)
 	self.pos = {x = data.x, y = data.y}
-	self.v = {x = data.speed, y = 0}
+	self.v = {x = data.speed.x, y = data.speed.y}
 	self.dims = {w = data.w, h = data.h}
 
 	if data.spritePath then
@@ -17,9 +17,9 @@ function Projectile:init(data)
 	self.solid = true
 end;
 
----@param player Player
-function Projectile:onCollision(player)
-	player:takeDamage(self.damage)
+---@param other Entity
+function Projectile:onCollision(other)
+	other:takeDamage(self.damage)
 end;
 
 ---@param dt number
@@ -28,7 +28,6 @@ function Projectile:update(dt)
 
 	local goalX = self.pos.x + self.v.x * dt
 	local goalY = self.pos.y + self.v.y * dt
-
 	if World then
 		local actualX, actualY, cols, len = World:move(self, goalX, goalY,
 			function(item, other)
