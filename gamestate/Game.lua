@@ -9,6 +9,7 @@ local ffi = require('ffi')
 local hitboxCheckboxState = ffi.new("bool[1]", false)
 local zoomValue = ffi.new("int[1]", 4)
 local Gun = require('class.Gun')
+local SoundManager = require('class.SoundManager')
 
 local Game = {}
 
@@ -17,15 +18,16 @@ function Game:init()
 	self.maps = loadMaps()
 	self.levelIndex = 1
 	self.tileSize = 16
-	local songPath = "asset/audio/casino.mp3"
-	self.music = love.audio.newSource(songPath, "stream")
-	self.music:play()
+	-- local songPath = "asset/audio/casino.mp3"
+	-- self.music = love.audio.newSource(songPath, "stream")
+	-- self.music:play()
 	self.showDebug = false
 	self.player = self:loadPlayer()
 	Gravity = 500
 	self.zoomValue = 4
 	camera = Camera(self.player.pos.x, self.player.pos.y, self.zoomValue)
 	self.numVisible = 0
+	self.soundManager = SoundManager(AllSounds.music)
 end;
 
 ---@param previous table Previously active State
@@ -36,6 +38,8 @@ function Game:enter(previous)
 	self.level = self.loadLevel(tileMap, self.tileSize)
 	self.addToWorld(self.player, self.enemies, self.level)
 	camera:lockPosition(self.player.pos.x, self.player.pos.y)
+	local songName = "level_" .. self.levelIndex
+	self.soundManager:play(songName)
 end;
 
 ---@return Player

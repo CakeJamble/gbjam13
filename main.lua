@@ -3,6 +3,8 @@ shove = require('lib.shove')
 Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
 
+local loadAudio = require('util.audio_loader')
+
 ---@param args string[]
 ---@return integer
 local function parseArgs(args)
@@ -55,6 +57,11 @@ function love.load(args)
 
 	----- Game Mechanics
 	Gravity = 500
+
+	----- Music
+	AllSounds = {sfx = {}, music = {}}
+	local musicDir = 'asset/audio/music'
+	loadAudio(musicDir, AllSounds.music, "stream")
 
 	----- Gamestates
 	States = {
