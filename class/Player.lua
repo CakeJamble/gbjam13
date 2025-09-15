@@ -126,6 +126,7 @@ function Player:update(dt)
 	self.gun.pos.x = self.pos.x
 	self.gun.pos.y = self.pos.y
 	self.gun:update(dt)
+	self.sfx:update(dt)
 end;
 
 ---@param dt number

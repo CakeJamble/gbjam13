@@ -4,7 +4,7 @@ local Class = require('lib.hump.class')
 ---@class Solid: Tile
 ---@field sprite love.Image
 local Solid = Class{__includes = Tile,
-sprite = love.graphics.newImage('asset/sprite/tile/solid.png')}
+sprite = love.graphics.newImage('asset/sprite/tile/ground.png')}
 
 function Solid:init(data)
 	Tile.init(self, data)

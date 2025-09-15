@@ -28,6 +28,7 @@ function Game:init()
 	camera = Camera(self.player.pos.x, self.player.pos.y, self.zoomValue)
 	self.numVisible = 0
 	self.soundManager = SoundManager(AllSounds.music)
+	self.paused = false
 end;
 
 ---@param previous table Previously active State
@@ -96,10 +97,10 @@ function Game.loadLevel(tileMap, tileSize)
 
 			if TileClass then
 				local data = {
-					x = (col - 1) * 32,
-					y = (row - 1) * 32,
-					w = 32,
-					h = 32,
+					x = (col - 1) * 8,
+					y = (row - 1) * 8,
+					w = 8,
+					h = 8,
 				}
 				local tile = TileClass(data)
 				table.insert(tiles, tile)
@@ -125,13 +126,28 @@ end;
 ---@param joystick string
 ---@param button string
 function Game:gamepadpressed(joystick, button)
-	self.player:gamepadpressed(joystick, button)
+	if not self.paused then
+		self.player:gamepadpressed(joystick, button)
+	end
+	if button == "start" then
+		self.paused = not self.paused
+
+		if self.paused then
+			self.soundManager:pause()
+			self.player.sfx:pause()
+		else
+			self.soundManager:resume()
+			self.player.sfx:resume()
+		end
+	end
 end;
 
 ---@param joystick string
 ---@param button string
 function Game:gamepadreleased(joystick, button)
-	self.player:gamepadreleased(joystick, button)
+	if not self.paused then
+		self.player:gamepadreleased(joystick, button)
+	end
 end;
 
 ---@param key string
@@ -177,19 +193,21 @@ function Game:update(dt)
 	-- local x,y = camera:position()
 	-- local px,py = self.player.pos.x, self.player.pos.y
 	-- print(x, y, px, py)
-	local slowdown = 1
-	local delta = dt * slowdown
-	self.player:update(delta)
-	for _,enemy in ipairs(self.enemies) do
-		enemy:update(delta)
-	end
-	if self.player.health == 0 then
-		self:reset()
-	end
+	if not self.paused then
+		local slowdown = 1
+		local delta = dt * slowdown
+		self.player:update(delta)
+		for _,enemy in ipairs(self.enemies) do
+			enemy:update(delta)
+		end
+		if self.player.health == 0 then
+			self:reset()
+		end
 
-	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
-	camera:lookAt(x, y)
-
+		local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
+		camera:lookAt(x, y)
+		self.soundManager:update(dt)
+	end
 	-- imgui debug stuff
 	imgui.love.Update(dt)
 	imgui.NewFrame()

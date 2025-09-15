@@ -48,11 +48,27 @@ function SoundManager:setVolumeLimits(min, max)
 	end
 end;
 
+function SoundManager:pause()
+	for _,src in ipairs(self.activeSounds) do
+			src:pause()
+	end
+end;
+
+function SoundManager:resume()
+	for _,src in ipairs(self.activeSounds) do
+		src:play()
+	end
+end;
 
 function SoundManager:update(dt)
 	for i,src in ipairs(self.activeSounds) do
 		if not src:isPlaying() then
-			table.remove(self.activeSounds, i)
+			local duration = src:getDuration()
+			local pos = src:tell()
+			if duration ~= 0 or pos >= duration then
+				sound = table.remove(self.activeSounds, i)
+				sound:release()
+			end
 		end
 	end
 end;
