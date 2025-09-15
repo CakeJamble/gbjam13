@@ -13,6 +13,7 @@ function Gun:init(data)
 	self.dims = {w = data.w, h = data.h}
 	self.direction = {x=1,y=0}
 	self.isUnlucky = false
+	self.owner = nil
 end;
 
 function Gun:shoot(isUnlucky)
@@ -24,13 +25,13 @@ function Gun:shoot(isUnlucky)
 			y = self.pos.y + self.dims.h / 2,
 			speed = {
 				x = self.direction.x * self.projectileSpeed.x,
-				y = self.direction.y * self.projectileSpeed.y
+				y = -self.direction.y * self.projectileSpeed.y
 			},
 			w = 8, h = 8,
 			spritePath = self.projectileType,
 			damage = self.damage
 		}
-		local projectile = Projectile(pData)
+		local projectile = Projectile(pData, self.owner)
 		World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
 		table.insert(self.projectiles, projectile)
 		-- play fire sound

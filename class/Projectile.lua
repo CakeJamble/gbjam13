@@ -4,7 +4,7 @@ local Class = require('lib.hump.class')
 local Projectile = Class{}
 
 ---@param data table
-function Projectile:init(data)
+function Projectile:init(data, owner)
 	self.pos = {x = data.x, y = data.y}
 	self.v = {x = data.speed.x, y = data.speed.y}
 	self.dims = {w = data.w, h = data.h}
@@ -15,6 +15,7 @@ function Projectile:init(data)
 	self.active = true
 	self.damage = data.damage or 1
 	self.solid = true
+	self.owner = owner
 end;
 
 ---@param other Entity
@@ -31,6 +32,9 @@ function Projectile:update(dt)
 	if World then
 		local actualX, actualY, cols, len = World:move(self, goalX, goalY,
 			function(item, other)
+				if other.owner == item then
+					return nil
+				end
 				if other.solid then
 					self.active = false
 					return "cross"
@@ -40,7 +44,8 @@ function Projectile:update(dt)
 		self.pos.y = actualY
 	end
 
-	if self.pos.x < -self.dims.w or self.pos.x > love.graphics.getWidth() then
+	if self.pos.x < -self.dims.w or self.pos.x > love.graphics.getWidth() or
+		self.pos.y < -self.dims.h or self.pos.y > love.graphics.getHeight() then
 		self.active = false
 	end
 end;
@@ -50,7 +55,7 @@ function Projectile:draw()
 		love.graphics.draw(self.image, self.pos.x, self.pos.y)
 	else
 		love.graphics.setColor(1,0,0)
-		love.graphics.circle("fill", self.pos.x + 8, self.pos.y + 8, self.dims.w / 2)
+		love.graphics.circle("fill", self.pos.x + self.dims.w / 2, self.pos.y + self.dims.h / 2, self.dims.w / 2)
 		love.graphics.setColor(1,1,1)
 	end
 end;

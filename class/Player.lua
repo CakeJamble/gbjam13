@@ -10,6 +10,7 @@ local Player = Class{__includes = Entity}
 function Player:init(data)
 	Entity.init(self, data)
 	self.gun = data.gun
+	self.gun.owner = self
 	self.startingPosition = {x = data.x, y = data.y} -- copy for restart
 	self.onGround = false
 	self.wasOnGround = self.onGround
@@ -130,7 +131,7 @@ function Player:updateAnimation(dt)
 		if animation.currentTime >= animation.duration then
 			animation.currentTime = animation.duration
 		end
-	else 
+	else
 		if animation.currentTime >= animation.duration then
 			animation.currentTime = animation.currentTime - animation.duration
 		end
