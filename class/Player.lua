@@ -2,6 +2,7 @@ local createAnimation = require('util.create_animation')
 local flux = require('lib.flux')
 local Entity = require('class.Entity')
 local Gun = require('class.Gun')
+local SoundManager = require('class.SoundManager')
 local Class = require('lib.hump.class')
 
 ---@class Player: Entity
@@ -25,6 +26,7 @@ function Player:init(data)
 	self.jumpCount = 0
 	self.lookYOffset = {base = 0, curr = 0, max = 32, duration = 0.5}
 	self.lookTween = nil
+	self.sfx = SoundManager(AllSounds.sfx.player)
 end;
 
 function Player:setGun(gun)
@@ -112,6 +114,7 @@ function Player:jump()
 		self.v.y = self.jumpForce
 		self.jumpCount = self.jumpCount + 1
 		self.currentAnimationTag = "jump"
+		self.sfx:play("jump")
 	end
 end;
 

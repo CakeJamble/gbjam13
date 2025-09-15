@@ -61,7 +61,9 @@ function love.load(args)
 	----- Music
 	AllSounds = {sfx = {}, music = {}}
 	local musicDir = 'asset/audio/music'
+	local sfxDir = 'asset/audio/sfx'
 	loadAudio(musicDir, AllSounds.music, "stream")
+	loadAudio(sfxDir, AllSounds.sfx, "static")
 
 	----- Gamestates
 	States = {
