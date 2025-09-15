@@ -50,8 +50,7 @@ function Game:loadPlayer()
 		w = 25, h = 24,
 		animations = {
 			"idle", "walk", "jump", -- "shoot", ...
-		},
-		gun=gun
+		}
 	}
 	local player = Player(playerData)
 	local startGun = Gun({
