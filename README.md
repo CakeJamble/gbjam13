@@ -9,7 +9,6 @@ Made with [LÖVE](https://love2d.org/)❣️
 - [shove](https://github.com/Oval-Tutu/shove)
 - [bump](https://github.com/kikito/bump.lua)
 - [SYSL-Text](https://github.com/sysl-dev/SYSL-Text)
-- [cimgui-love](https://codeberg.org/apicici/cimgui-love)
 
 ## Repo Structure
 
