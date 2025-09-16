@@ -6,16 +6,19 @@ local Class = require('lib.hump.class')
 local Projectile = require('class.Projectile')
 
 ---@class Calendar: Entity
-local Calendar = Class{__includes = Entity}
+---@field sprite love.Image
+---field projectileSprite love.Image
+local Calendar = Class{__includes = Entity,
+sprite = love.graphics.newImage('asset/sprite/enemy/calendar.png'),
+projectileSprite = love.graphics.newImage('asset/sprite/enemy/calendar_projectile.png')}
 
 function Calendar:init(data)
 	Entity.init(self, data)
+	self.name = "Calendar"
 	self.startingPosition = {x = data.x, y = data.y}
 	self.projectiles = {}
-	Timer.every(3, function() self:shoot() end)
 
-	local image = love.graphics.newImage('asset/sprite/enemy/calendar.png')
-	local sprite = createAnimation(image, 16, 16)
+	local sprite = createAnimation(Calendar.sprite, 16, 16)
 	sprite.loop = true
 	self.animations.idle = sprite
 	self.solid = true
@@ -27,6 +30,10 @@ function Calendar:init(data)
 	self.spriteOffsets = {x = 16, y = 16}
 end;
 
+function Calendar:start()
+	Timer.every(3, function() self:shoot(Calendar.projectileSprite) end)
+end;
+
 ---@param player Player
 function Calendar:onCollision(player)
 	player:takeDamage(self.damage)
@@ -36,7 +43,8 @@ function Calendar:takeDamage(amount)
 	self.health = self.health - 1
 end;
 
-function Calendar:shoot()
+---@param projectileSprite love.Image
+function Calendar:shoot(projectileSprite)
 	local data = {
 		x = self.pos.x - self.dims.w,
 		y = self.pos.y + self.dims.h/2,
@@ -44,7 +52,7 @@ function Calendar:shoot()
 		h = 8,
 		speed = {x = -200, y = 0},
 		damage = 1,
-		spritePath = "asset/sprite/enemy/calendar_projectile.png"
+		sprite = projectileSprite
 	}
 	local projectile = Projectile(data)
 	World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)

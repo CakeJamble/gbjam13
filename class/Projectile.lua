@@ -9,8 +9,8 @@ function Projectile:init(data, owner)
 	self.v = {x = data.speed.x, y = data.speed.y}
 	self.dims = {w = data.w, h = data.h}
 
-	if data.spritePath then
-		self.image = love.graphics.newImage(data.spritePath)
+	if data.sprite then
+		self.image = data.sprite
 	end
 	self.active = true
 	self.damage = data.damage or 1

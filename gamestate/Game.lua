@@ -132,14 +132,15 @@ end;
 ---@param enemies Entity[]
 ---@param level Tile[]
 function Game.addToWorld(player, enemies, level)
+	for _,tile in ipairs(level) do
+		World:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
+	end
+
 	World:add(player, player.pos.x, player.pos.y, player.dims.w, player.dims.h)
 
 	for _,enemy in ipairs(enemies) do
 		World:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
-	end
-
-	for _,tile in ipairs(level) do
-		World:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
+		enemy:start()
 	end
 end;
 
