@@ -24,6 +24,11 @@ function SoundManager:play(key)
 	local sound = base:clone()
 	sound:setVolume(self.volume)
 	sound:setVolumeLimits(self.volumeLimits.min, self.volumeLimits.max)
+
+	local soundType = sound:getType()
+	if sound == "stream" then
+		sound:setLooping(true)
+	end
 	sound:play()
 
 	table.insert(self.activeSounds, sound)
