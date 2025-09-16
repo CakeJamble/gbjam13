@@ -4,12 +4,15 @@ local loadEnemies = require('util.enemy_loader')
 local tileRegistry = require('level.tile_registry')
 local Player = require('class.Player')
 local Camera = require('lib.hump.camera')
+local Timer = require('lib.hump.timer')
 local imgui = require('lib.cimgui')
 local ffi = require('ffi')
 local hitboxCheckboxState = ffi.new("bool[1]", false)
 local zoomValue = ffi.new("int[1]", 4)
 local Gun = require('class.Gun')
 local SoundManager = require('class.SoundManager')
+local ProgressBar = require('class.ProgressBar')
+local Signal = require('lib.hump.signal')
 
 local Game = {}
 
@@ -29,6 +32,19 @@ function Game:init()
 	self.numVisible = 0
 	self.soundManager = SoundManager(AllSounds.music)
 	self.paused = false
+	self.showUnluckyMessage = false
+	self.unluckyMessageBox = Text.new("left", {
+		color = {0.9,0.9,0.9,0.95},
+	})
+	self.unluckyMessage = "[bounce]Your luck has turned...[/bounce]"
+	Signal.register('OnUnlucky',
+		function()
+			self.showUnluckyMessage = true
+			self.unluckyMessageBox:send(self.unluckyMessage, 140)
+			Timer.after(3, function()
+				self.showUnluckyMessage = false
+			end)
+		end)
 end;
 
 ---@param previous table Previously active State
@@ -37,10 +53,26 @@ function Game:enter(previous)
 	local tileMap = self.maps[self.levelIndex]
 	World = bump.newWorld(self.tileSize)
 	self.level = self.loadLevel(tileMap, self.tileSize)
+	self.levelWidth = self.tileSize * #self.level[1]
+	self.levelHeight = self.tileSize * #self.level
 	self.addToWorld(self.player, self.enemies, self.level)
 	camera:lockPosition(self.player.pos.x, self.player.pos.y)
 	local songName = "level_" .. self.levelIndex
 	self.soundManager:play(songName)
+	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
+end;
+
+function Game.initUnluckyMeter(playerPos)
+	local x,y = playerPos.x + 10, playerPos.y + 10 
+	-- local cx,cy = camera:worldCoords(x,y)
+	local options = {
+		x = x,
+		y = y,
+		w = 10,
+		h = 40,
+		min=0,max=100,
+	}
+	return ProgressBar(options)
 end;
 
 ---@return Player
@@ -194,6 +226,9 @@ function Game:update(dt)
 	-- local px,py = self.player.pos.x, self.player.pos.y
 	-- print(x, y, px, py)
 	if not self.paused then
+		if self.showUnluckyMessage then
+			self.unluckyMessageBox:update(dt)
+		end
 		local slowdown = 1
 		local delta = dt * slowdown
 		self.player:update(delta)
@@ -234,6 +269,9 @@ function Game:draw()
 	-- shove.beginDraw()
 	camera:attach()
 	self.player:draw()
+	if self.showUnluckyMessage then
+		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
+	end
 	self:drawTiles()
 	for _,enemy in ipairs(self.enemies) do
 		enemy:draw()
@@ -242,7 +280,9 @@ function Game:draw()
 	if self.drawHitboxes then
 		self:drawCollision()
 	end
+
 	camera:detach()
+	self.unluckyMeter:draw(self.zoomValue)
 	local hp = tostring(self.player.health)
 	love.graphics.print(hp, 10, 10)
 	local numVis = tostring(self.numVisible)

@@ -1,3 +1,5 @@
 *.sublime-workspace
 *.sublime-project
 .luacheckrc
+conf.lua
+shove-profiler.lua

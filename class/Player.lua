@@ -1,3 +1,4 @@
+local Signal = require('lib.hump.signal')
 local createAnimation = require('util.create_animation')
 local flux = require('lib.flux')
 local Entity = require('class.Entity')
@@ -27,6 +28,13 @@ function Player:init(data)
 	self.lookYOffset = {base = 0, curr = 0, max = 32, duration = 0.5}
 	self.lookTween = nil
 	self.sfx = SoundManager(AllSounds.sfx.player)
+	--self.unluckyMeter = ProgressBar()
+
+	Signal.register('OnUnlucky',
+		function()
+			self.isUnlucky = true
+			self.gun.isUnlucky = true
+		end)
 end;
 
 function Player:setGun(gun)
