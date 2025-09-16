@@ -2,7 +2,6 @@ Gamestate = require('lib.hump.gamestate')
 shove = require('lib.shove')
 Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
-
 local loadAudio = require('util.audio_loader')
 
 ---@param args string[]
@@ -25,17 +24,24 @@ end;
 function love.load(args)
 	----- Screen
 	love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
-	shove.setResolution(160, 144, {
-		fitMethod = "pixel",
-		renderMode = "direct" -- change to "layer" if you want to use drawing layers
-	})
-
-	local scale = parseArgs(args)
+	local scale = parseArgs(args) --> 8
 
 	WindowWidth, WindowHeight = 160 * scale, 144 * scale
-	shove.setWindowMode(WindowWidth, WindowHeight, {
-		resizable = true
+
+	shove.setResolution(160, 144, {
+		fitMethod = "pixel",
+		scalingFilter = "nearest",
+		renderMode = "layer" -- change to "layer" if you want to use drawing layers
 	})
+
+
+local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
+shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
+  resizable = true,
+  vsync = true,
+  minwidth = 160,
+  minheight = 144
+})
 
 	----- Text Boxes & Frames
 	images = {}
@@ -73,11 +79,4 @@ function love.load(args)
 	}
 	Gamestate.registerEvents()
 	Gamestate.switch(States["MainMenu"])
-end;
-
-function love.conf(t)
-	t.identity = "gbjam13"
-	t.version = "12.0"
-	t.console = false
-	t.window.title = "GBJam13"
 end;

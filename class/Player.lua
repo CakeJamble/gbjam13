@@ -11,6 +11,7 @@ local Player = Class{__includes = Entity}
 
 function Player:init(data)
 	Entity.init(self, data)
+	self.isBlocked = false
 	self.gun = nil
 	self.startingPosition = {x = data.x, y = data.y} -- copy for restart
 	self.onGround = false
@@ -104,6 +105,32 @@ function Player:gamepadpressed(joystick, button)
 	self.gun:gamepadpressed(joystick, button)
 end;
 
+function Player:keypressed(key)
+	if key == "left" then
+		self.moveDir = -1
+		self.facing = -1
+		self:tweenCamera("base")
+		self.currentAnimationTag = "walk"
+	elseif key == "right" then
+		self.moveDir = 1
+		self.facing = 1
+		self:tweenCamera("base")
+		self.currentAnimationTag = "walk"
+	elseif key == "up" then
+		if self.moveDir == 0 then
+			self:tweenCamera("max", -1)
+		end
+	elseif key == "down" then
+		if self.moveDir == 0 then
+			self:tweenCamera("max", 1)
+		end
+	elseif key == "z" then
+		self:jump()
+	end
+
+	self.gun:keypressed(key)
+end;
+
 ---@param joystick string
 ---@param button string
 function Player:gamepadreleased(joystick, button)
@@ -115,6 +142,17 @@ function Player:gamepadreleased(joystick, button)
 	end
 
 	self.gun:gamepadreleased(joystick, button)
+end;
+
+function Player:keyreleased(key)
+	if key == "left" or key == "right" then
+		self.moveDir = 0
+		self.currentAnimationTag = "idle"
+	elseif key == "up" or key == "down" then
+		self:tweenCamera("base")
+	end
+
+	self.gun:keyreleased(key)
 end;
 
 function Player:jump()
@@ -165,6 +203,8 @@ function Player:updatePosition(dt)
 		function(item, other)
 			if other.solid then return "slide" end
 		end)
+
+	self.isBlocked = (actualX ~= goalX) and self.moveDir ~= 0
 	self.pos.x, self.pos.y = actualX, actualY
 	self.wasOnGround = self.onGround
 	self.onGround = false

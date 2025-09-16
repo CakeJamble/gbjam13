@@ -5,6 +5,7 @@ end;
 
 ---@param previous table Previously active State
 function MainMenu:enter(previous)
+	shove.createLayer("background", {zIndex = 1})
 	self.bg = love.graphics.newImage("asset/sprite/splash_screen.png")
 	self.textBox = Text.new("left",
 	{
@@ -30,16 +31,25 @@ function MainMenu:gamepadpressed(joystick, button)
 	end
 end;
 
+function MainMenu:keypressed(key)
+	if key == 'z' then
+		Gamestate.switch(States["Game"])
+	end
+end;
+
 ---@param dt number
 function MainMenu:update(dt)
 	self.textBox:update(dt)
+	-- cam:update(dt)
 end;
 
 function MainMenu:draw()
 	shove.beginDraw()
+	shove.beginLayer("background")
 	love.graphics.draw(self.bg,0,0)
 	Frame.draw("eb", 0, 100, 160, 44)
 	self.textBox:draw(5, 100)
+	shove.endLayer()
 	shove.endDraw()
 end;
 
