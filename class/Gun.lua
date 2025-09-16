@@ -52,8 +52,28 @@ function Gun:gamepadpressed(joystick, button)
 	end
 end;
 
+function Gun:keypressed(key)
+	if key == "left" then
+		self.direction.x = -1
+	elseif key == "right" then
+		self.direction.x = 1
+	elseif key == "up" then
+		self.direction.y = 1
+	elseif key == "down" then
+		self.direction.y = -1
+	elseif key == "x" then
+		self:shoot(self.isUnlucky)
+	end
+end;
+
 function Gun:gamepadreleased(joystick, button)
 	if button == "dpup" or button == "dpdown" then
+		self.direction.y = 0
+	end
+end;
+
+function Gun:keyreleased(key)
+	if key == "up" or key == "down" then
 		self.direction.y = 0
 	end
 end;
