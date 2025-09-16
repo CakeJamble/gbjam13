@@ -3,32 +3,27 @@ local loadMaps = require('util.map_loader')
 local loadEnemies = require('util.enemy_loader')
 local tileRegistry = require('level.tile_registry')
 local Player = require('class.Player')
-local Camera = require('lib.hump.camera')
 local Timer = require('lib.hump.timer')
-local imgui = require('lib.cimgui')
-local ffi = require('ffi')
-local hitboxCheckboxState = ffi.new("bool[1]", false)
-local zoomValue = ffi.new("int[1]", 4)
 local Gun = require('class.Gun')
 local SoundManager = require('class.SoundManager')
 local ProgressBar = require('class.ProgressBar')
 local Signal = require('lib.hump.signal')
 
+
 local Game = {}
 
 function Game:init()
-	imgui.love.Init()
+	-- imgui.love.Init()
+	shove.createLayer("everything_else", {zIndex = 1000})
+	shove.createLayer("ui", {zIndex = 1001})
+	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
 	self.maps = loadMaps()
 	self.levelIndex = 1
 	self.tileSize = 16
-	-- local songPath = "asset/audio/casino.mp3"
-	-- self.music = love.audio.newSource(songPath, "stream")
-	-- self.music:play()
 	self.showDebug = false
 	self.player = self:loadPlayer()
 	Gravity = 500
 	self.zoomValue = 4
-	camera = Camera(self.player.pos.x, self.player.pos.y, self.zoomValue)
 	self.numVisible = 0
 	self.soundManager = SoundManager(AllSounds.music)
 	self.paused = false
@@ -49,6 +44,7 @@ end;
 
 ---@param previous table Previously active State
 function Game:enter(previous)
+	self.parallax = self.initBG()
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize)
 	local tileMap = self.maps[self.levelIndex]
 	World = bump.newWorld(self.tileSize)
@@ -56,15 +52,46 @@ function Game:enter(previous)
 	self.levelWidth = self.tileSize * #self.level[1]
 	self.levelHeight = self.tileSize * #self.level
 	self.addToWorld(self.player, self.enemies, self.level)
-	camera:lockPosition(self.player.pos.x, self.player.pos.y)
 	local songName = "level_" .. self.levelIndex
 	self.soundManager:play(songName)
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 end;
 
+function Game.initBG()
+  local parallax = {
+    layers = {},
+    scrollAmplitude = 600,
+    currentX = 0,            -- Current scroll position
+    time = 0,                -- Time counter for scroll animation
+    speed = 0.15
+  }
+  local layerImages = {
+  	{img = love.graphics.newImage("asset/sprite/tile/TILE_Stars_1_ANIMATED.png"), depth = 1.0, name = "layer_01"},
+  	{img = love.graphics.newImage("asset/sprite/tile/TILE_Stars_2_ANIMATED.png"), depth = 0.5, name = "layer_02"}
+  }
+  local vW = shove.getViewportWidth()
+  local vH = shove.getViewportHeight()
+  for i,layer in ipairs(layerImages) do
+  	local w,h = layer.img:getDimensions()
+  	local sx = vH / w
+  	local sy = vH / h
+  	local scale = math.max(sx, sy) * 1.2
+  	parallax.layers[i] = {
+  		img = layer.img,
+  		depth = layer.depth,
+  		name = layer.name,
+  		scale = scale,
+  		zIndex = 90 - (1 * 10) -- zIndex goes up -> closer to foreground
+  	}
+
+  	shove.createLayer(layer.name, {zIndex = parallax.layers[i].zIndex})
+  end
+  shove.createLayer("background", {zIndex = 5})
+	return parallax
+end;
+
 function Game.initUnluckyMeter(playerPos)
 	local x,y = playerPos.x + 10, playerPos.y + 10 
-	-- local cx,cy = camera:worldCoords(x,y)
 	local options = {
 		x = x,
 		y = y,
@@ -174,6 +201,23 @@ function Game:gamepadpressed(joystick, button)
 	end
 end;
 
+function Game:keypressed(key)
+	if not self.paused then
+		self.player:keypressed(key)
+	end
+	if key == "return" then
+		self.paused = not self.paused
+
+		if self.paused then
+			self.soundManager:pause()
+			self.player.sfx:pause()
+		else
+			self.soundManager:resume()
+			self.player.sfx:resume()
+		end
+	end
+end;
+
 ---@param joystick string
 ---@param button string
 function Game:gamepadreleased(joystick, button)
@@ -182,10 +226,9 @@ function Game:gamepadreleased(joystick, button)
 	end
 end;
 
----@param key string
-function Game:keypressed(key)
-	if key == '`' then
-		self.showDebug = not self.showDebug
+function Game:keyreleased(key)
+	if not self.paused then
+		self.player:keyreleased(key)
 	end
 end;
 
@@ -217,79 +260,94 @@ end;
 
 ---@param dt number
 function Game:update(dt)
-	-- self.numVisible = self:countVisibleObj()
-	-- local x,y = camera:cameraCoords()
-	-- local w,h = shove.getViewportDimensions()
-	-- local visible = World:queryRect(x,y,w,h)
-	-- local slowdown = math.max(0.5, 1 - self.numVisible / 10)
-	-- local x,y = camera:position()
-	-- local px,py = self.player.pos.x, self.player.pos.y
-	-- print(x, y, px, py)
 	if not self.paused then
 		if self.showUnluckyMessage then
 			self.unluckyMessageBox:update(dt)
 		end
-		local slowdown = 1
-		local delta = dt * slowdown
-		self.player:update(delta)
+		self.player:update(dt)
 		for _,enemy in ipairs(self.enemies) do
-			enemy:update(delta)
+			enemy:update(dt)
 		end
 		if self.player.health == 0 then
 			self:reset()
 		end
 
-		local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
-		camera:lookAt(x, y)
 		self.soundManager:update(dt)
-	end
-	-- imgui debug stuff
-	imgui.love.Update(dt)
-	imgui.NewFrame()
-
-	if self.showDebug then
-		imgui.Begin("Debug Window")
-
-		if imgui.Checkbox("Show Hitboxes", hitboxCheckboxState) then
-			self.drawHitboxes = hitboxCheckboxState[0]
-		end
-
-		if imgui.InputInt("Zoom", zoomValue) then
-			self.zoomValue = math.max(1, zoomValue[0])
-			zoomValue[0] = self.zoomValue
-			camera:zoomTo(self.zoomValue)
-			camera:lockPosition(self.player.pos.x, self.player.pos.y)
-		end
-
-		imgui.End()
+		self:updateCamera(dt)
+		self:updateParallax(dt)
 	end
 end;
 
-function Game:draw()
-	-- shove.beginDraw()
-	camera:attach()
-	self.player:draw()
-	if self.showUnluckyMessage then
-		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
+function Game:updateCamera(dt)
+	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
+	local tx,ty = x-80,y-72
+	self.camera.x = self.camera.x + (tx - self.camera.x) * self.camera.speed * dt
+	self.camera.y = self.camera.y + (ty - self.camera.y) * self.camera.speed * dt
+end;
+
+function Game:updateParallax(dt)
+	-- for time based animation like rain
+	self.parallax.time = self.parallax.time + dt
+	-- self.parallax.currentX = math.sin(self.parallax.time * self.parallax.speed) * self.parallax.scrollAmplitude
+	-- for movement based animation like scrolling bg
+	if not self.player.isBlocked then
+		self.parallax.currentX = self.parallax.currentX + self.player.moveDir * self.player.speed * dt
 	end
+end;
+
+
+function Game:draw()
+	shove.beginDraw()
+	love.graphics.push()
+
+	-- camera smoothing
+	love.graphics.translate(-math.floor(self.camera.x), -math.floor(self.camera.y))
+
+	-- parallax scrolling background
+	for i,layer in ipairs(self.parallax.layers) do
+		shove.beginLayer(layer.name)
+		local offsetX = self.parallax.currentX * layer.depth
+		local vW = shove.getViewportWidth()
+		local vH = shove.getViewportHeight()
+		local imgWidth = layer.img:getWidth() * layer.scale
+		local imgHeight = layer.img:getHeight() * layer.scale
+		local posY = vH - imgHeight
+		local totalWidthNeeded = vW + self.parallax.scrollAmplitude * 2 * layer.depth
+		local copiesNeeded = math.ceil(totalWidthNeeded / imgWidth)
+		local baseX = offsetX % imgWidth
+
+		for j=0, copiesNeeded do
+			local drawX = baseX - imgWidth + (j * imgWidth)
+			love.graphics.draw(layer.img, drawX, posY, 0, layer.scale, layer.scale)
+		end
+		shove.endLayer()
+	end
+
+	shove.beginLayer("everything_else")
 	self:drawTiles()
 	for _,enemy in ipairs(self.enemies) do
 		enemy:draw()
 	end
-
+	self.player:draw()
+	if self.showUnluckyMessage then
+		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
+	end
 	if self.drawHitboxes then
 		self:drawCollision()
 	end
 
-	camera:detach()
+	shove.endLayer()
+	love.graphics.pop()
+
+	-- ui, drawn independently from camera/scroll
+	shove.beginLayer("ui")
 	self.unluckyMeter:draw(self.zoomValue)
 	local hp = tostring(self.player.health)
 	love.graphics.print(hp, 10, 10)
 	local numVis = tostring(self.numVisible)
 	love.graphics.print(numVis, 15, 20)
-	-- shove.endDraw()
-	imgui.Render()
-	imgui.love.RenderDrawLists()
+	shove.endLayer()
+	shove.endDraw()
 end;
 
 function Game:drawTiles()
@@ -306,38 +364,5 @@ function Game:drawCollision()
 	end
 	love.graphics.setColor(1,1,1,1)
 end;
-
----- imgui callbacks
----@param x number
----@param y number
----@param dx number
----@param dy number
----@param istouch boolean
-function Game:mousemoved(x, y, dx, dy, istouch)
-  imgui.love.MouseMoved(x, y)
-end;
-
----@param x number
----@param y number
----@param button string
----@param istouch boolean
----@param presses number
-function Game:mousepressed(x, y, button, istouch, presses)
-  imgui.love.MousePressed(button)
-end;
-
----@param x number
----@param y number
----@param button string
----@param istouch boolean
----@param presses number
-function Game:mousereleased(x, y, button, istouch, presses)
-  imgui.love.MouseReleased(button)
-end;
-
-function Game:quit()
-	imgui.love.Shutdown()
-end;
-
 
 return Game
