@@ -1,4 +1,5 @@
 local Signal = require('lib.hump.signal')
+local Timer = require('lib.hump.timer')
 local createAnimation = require('util.create_animation')
 local flux = require('lib.flux')
 local Entity = require('class.Entity')
@@ -11,6 +12,8 @@ local Player = Class{__includes = Entity}
 
 function Player:init(data)
 	Entity.init(self, data)
+	self.name = "Player"
+	self.type = "player"
 	self.isBlocked = false
 	self.gun = nil
 	self.startingPosition = {x = data.x, y = data.y} -- copy for restart
@@ -30,6 +33,13 @@ function Player:init(data)
 	self.lookTween = nil
 	self.sfx = SoundManager(AllSounds.sfx.player)
 	--self.unluckyMeter = ProgressBar()
+	self.canTakeDamage = true
+	self.invulnTime = 2
+	self.invulnTimer = 0
+	self.stumbleTime = 0.5
+	self.vis = true
+	self.blink = 0
+
 
 	Signal.register('OnUnlucky',
 		function()
@@ -43,9 +53,36 @@ function Player:setGun(gun)
 end;
 
 function Player:takeDamage(amount)
-	amount = amount or 1
-	self.health = self.health - amount
-	self:resetPosition()
+	if self.canTakeDamage then
+		amount = amount or 1
+		self.health = self.health - amount
+
+		if self.health < 1 then
+			self:resetPosition()
+
+			-- play death/reset sfx
+		else
+			self.canTakeDamage = false
+			self:stumbleAndBlink()
+			-- play damage noise
+		end
+	end
+end;
+
+function Player:stumbleAndBlink()
+	local knockback = -self.moveDir * 50
+	local px = self.pos.x
+	flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
+	self.blinkTween = flux.to(self, self.invulnTime, {blink = 1})
+		:onupdate(
+			function()
+				self.vis = math.floor(self.blink * 5) % 2 == 0
+			end)
+		:oncomplete(
+			function()
+				self.canTakeDamage = true
+				self.vis = true
+			end)
 end;
 
 function Player:resetPosition()
@@ -175,42 +212,6 @@ function Player:update(dt)
 	self.sfx:update(dt)
 end;
 
----@param dt number
-function Player:updateAnimation(dt)
-	local animation = self.animations[self.currentAnimationTag]
-	animation.currentTime = animation.currentTime + dt
-
-	if not animation.loop then
-		if animation.currentTime >= animation.duration then
-			animation.currentTime = animation.duration
-		end
-	else
-		if animation.currentTime >= animation.duration then
-			animation.currentTime = animation.currentTime - animation.duration
-		end
-	end
-end;
-
----@param dt number
----@return table
-function Player:updatePosition(dt)
-	self.v.x = self.moveDir * self.speed
-	self.v.y = self.v.y + Gravity * dt
-
-	local goalX = self.pos.x + self.v.x * dt
-	local goalY = self.pos.y + self.v.y * dt
-	local actualX, actualY, cols, len = World:move(self, goalX, goalY,
-		function(item, other)
-			if other.solid then return "slide" end
-		end)
-
-	self.isBlocked = (actualX ~= goalX) and self.moveDir ~= 0
-	self.pos.x, self.pos.y = actualX, actualY
-	self.wasOnGround = self.onGround
-	self.onGround = false
-	return {cols = cols, len = len}
-end;
-
 ---@param collisionInfo table
 function Player:handleCollision(collisionInfo)
 	local cols, len = collisionInfo.cols, collisionInfo.len
@@ -237,8 +238,10 @@ function Player:handleCollision(collisionInfo)
 end;
 
 function Player:draw()
-	self:drawSprite()
-	self.gun:draw()
+	if self.vis then
+		self:drawSprite()
+		self.gun:draw()
+	end
 end;
 
 function Player:drawSprite()

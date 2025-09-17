@@ -15,6 +15,7 @@ projectileSprite = love.graphics.newImage('asset/sprite/enemy/calendar_projectil
 function Calendar:init(data)
 	Entity.init(self, data)
 	self.name = "Calendar"
+	self.type = "enemy"
 	self.startingPosition = {x = data.x, y = data.y}
 	self.projectiles = {}
 
@@ -76,12 +77,17 @@ end;
 function Calendar:update(dt)
 	Entity.update(self, dt)
 	flux.update(dt)
-	Timer.update(dt)
 
 	local goalX = self.pos.x
 	local goalY = self.baseY + self.offsetY
 	local actualX, actualY, cols, len = World:move(self, goalX, goalY)
 	self.pos.x, self.pos.y = actualX, actualY
+
+	for _,col in ipairs(cols) do
+		if col.other.type == "player" and col.other.canTakeDamage then
+			col.other:takeDamage(self.damage)
+		end
+	end
 
 	for i,projectile in ipairs(self.projectiles) do
 		projectile:update(dt)

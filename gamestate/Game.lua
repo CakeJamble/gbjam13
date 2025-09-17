@@ -14,6 +14,7 @@ local Game = {}
 
 function Game:init()
 	-- imgui.love.Init()
+	self.drawHitboxes = true
 	shove.createLayer("everything_else", {zIndex = 1000})
 	shove.createLayer("ui", {zIndex = 1001})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
@@ -104,7 +105,7 @@ end;
 
 ---@return Player
 function Game:loadPlayer()
-	local col, row = 5, 6
+	local col, row = 2, 6
 	local x = (col - 1) * self.tileSize
 	local y = (row - 1) * self.tileSize
 
@@ -261,14 +262,16 @@ end;
 
 ---@param dt number
 function Game:update(dt)
+	Timer.update(dt)
 	if not self.paused then
 		if self.showUnluckyMessage then
 			self.unluckyMessageBox:update(dt)
 		end
-		self.player:update(dt)
+
 		for _,enemy in ipairs(self.enemies) do
 			enemy:update(dt)
 		end
+		self.player:update(dt)
 		if self.player.health == 0 then
 			self:reset()
 		end
@@ -288,7 +291,7 @@ end;
 
 function Game:updateParallax(dt)
 	-- for time based animation like rain
-	self.parallax.time = self.parallax.time + dt
+	-- self.parallax.time = self.parallax.time + dt
 	-- self.parallax.currentX = math.sin(self.parallax.time * self.parallax.speed) * self.parallax.scrollAmplitude
 	-- for movement based animation like scrolling bg
 	if not self.player.isBlocked then
@@ -342,11 +345,9 @@ function Game:draw()
 
 	-- ui, drawn independently from camera/scroll
 	shove.beginLayer("ui")
-	self.unluckyMeter:draw(self.zoomValue)
+	-- self.unluckyMeter:draw()
 	local hp = tostring(self.player.health)
-	love.graphics.print(hp, 10, 10)
-	local numVis = tostring(self.numVisible)
-	love.graphics.print(numVis, 15, 20)
+	love.graphics.print("health: " .. hp, 10, 10)
 	shove.endLayer()
 	shove.endDraw()
 end;
