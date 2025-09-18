@@ -1,10 +1,10 @@
-local MainMenu = {}
+local SplashScreen = {}
 
-function MainMenu:init()
+function SplashScreen:init()
 end;
 
 ---@param previous table Previously active State
-function MainMenu:enter(previous)
+function SplashScreen:enter(previous)
 	shove.createLayer("background", {zIndex = 1})
 	self.bg = love.graphics.newImage("asset/sprite/splash_screen.png")
 	self.textBox = Text.new("left",
@@ -19,31 +19,31 @@ function MainMenu:enter(previous)
 	self:start()
 end;
 
-function MainMenu:start()
+function SplashScreen:start()
 	self.textBox:send(self.text, 140)
 end;
 
 ---@param joystick string
 ---@param button string
-function MainMenu:gamepadpressed(joystick, button)
+function SplashScreen:gamepadpressed(joystick, button)
 	if button == 'a' then
 		Gamestate.switch(States["Game"])
 	end
 end;
 
-function MainMenu:keypressed(key)
+function SplashScreen:keypressed(key)
 	if key == 'z' then
 		Gamestate.switch(States["Game"])
 	end
 end;
 
 ---@param dt number
-function MainMenu:update(dt)
+function SplashScreen:update(dt)
 	self.textBox:update(dt)
 	-- cam:update(dt)
 end;
 
-function MainMenu:draw()
+function SplashScreen:draw()
 	shove.beginDraw()
 	shove.beginLayer("background")
 	love.graphics.draw(self.bg,0,0)
@@ -53,4 +53,4 @@ function MainMenu:draw()
 	shove.endDraw()
 end;
 
-return MainMenu
+return SplashScreen
