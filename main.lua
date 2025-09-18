@@ -3,6 +3,7 @@ shove = require('lib.shove')
 Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
 local loadAudio = require('util.audio_loader')
+local moonshine = require('lib.moonshine')
 
 ---@param args string[]
 ---@return integer
@@ -23,7 +24,7 @@ end;
 ---@param args string[]
 function love.load(args)
 	----- Screen
-	love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
+	-- love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
 	local scale = parseArgs(args) --> 8
 
 	WindowWidth, WindowHeight = 160 * scale, 144 * scale
@@ -42,6 +43,13 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
   minwidth = 160,
   minheight = 144
 })
+
+
+	----- Moonshine Shader
+	DMG = moonshine.effects.dmg()
+	shove.addGlobalEffect(DMG.shader)
+	ShaderIndex = 1
+
 
 	----- Text Boxes & Frames
 	images = {}
@@ -79,4 +87,23 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
 	}
 	Gamestate.registerEvents()
 	Gamestate.switch(States["MainMenu"])
+end;
+
+function love.gamepadpressed(joystick, button)
+	if button == "select" then
+		ShaderIndex = ShaderIndex + 1
+		print(ShaderIndex)
+		if ShaderIndex > 0 then
+			DMG.setters.palette(ShaderIndex % 8)
+		end
+	end
+end;
+
+function love.keypressed(key)
+	if key == "tab" then
+		ShaderIndex = ShaderIndex + 1
+		if ShaderIndex > 0 then
+			DMG.setters.palette(ShaderIndex % 8)
+		end
+	end
 end;

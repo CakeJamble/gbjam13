@@ -10,6 +10,7 @@ local Class = require('lib.hump.class')
 ---@class Player: Entity
 local Player = Class{__includes = Entity}
 
+---@param data table
 function Player:init(data)
 	Entity.init(self, data)
 	self.name = "Player"
@@ -48,10 +49,12 @@ function Player:init(data)
 		end)
 end;
 
+---@param gun Gun
 function Player:setGun(gun)
 	self.gun = gun
 end;
 
+---@param amount integer
 function Player:takeDamage(amount)
 	if self.canTakeDamage then
 		amount = amount or 1
@@ -95,6 +98,7 @@ end;
 
 ---@param dir string
 ---@param animations string[]
+---@return table
 function Player:initAnimations(dir, animations)
 	local result = {}
 	for _,animName in ipairs(animations) do
@@ -143,6 +147,7 @@ function Player:gamepadpressed(joystick, button)
 	self.gun:gamepadpressed(joystick, button)
 end;
 
+---@param key string
 function Player:keypressed(key)
 	if key == "left" then
 		self.moveDir = -1
@@ -182,6 +187,7 @@ function Player:gamepadreleased(joystick, button)
 	self.gun:gamepadreleased(joystick, button)
 end;
 
+---@param key string
 function Player:keyreleased(key)
 	if key == "left" or key == "right" then
 		self.moveDir = 0

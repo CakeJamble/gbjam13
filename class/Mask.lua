@@ -10,6 +10,7 @@ local Class = require('lib.hump.class')
 local Mask = Class{__includes = Entity,
 sprite = love.graphics.newImage('asset/sprite/enemy/mask.png')}
 
+---@param data table
 function Mask:init(data)
 	Entity.init(self, data)
 	self.hoverX = self.pos.x - 60
@@ -91,6 +92,7 @@ function Mask:returnToHover()
 		end)
 end;
 
+---@param dt number
 function Mask:update(dt)
 	self.swoopTimer:update(dt)
 	-- follow
@@ -135,6 +137,9 @@ function Mask:update(dt)
 	end
 end;
 
+---@param a number
+---@param b number
+---@param t number
 function Mask.lerp(a,b,t)
 	return a + (b - a) * t
 end;

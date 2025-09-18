@@ -9,13 +9,11 @@ local SoundManager = require('class.SoundManager')
 local ProgressBar = require('class.ProgressBar')
 local Signal = require('lib.hump.signal')
 
-
 local Game = {}
 
 function Game:init()
-	-- imgui.love.Init()
-	self.drawHitboxes = true
-	shove.createLayer("everything_else", {zIndex = 1000})
+	self.drawHitboxes = false
+	shove.createLayer("level", {zIndex = 1000})
 	shove.createLayer("ui", {zIndex = 1001})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
 	self.maps = loadMaps()
@@ -58,6 +56,8 @@ function Game:enter(previous)
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 end;
 
+-- From shove tutorial on parallax scrolling
+---@return table
 function Game.initBG()
   local parallax = {
     layers = {},
@@ -91,6 +91,7 @@ function Game.initBG()
 	return parallax
 end;
 
+---@param playerPos table
 function Game.initUnluckyMeter(playerPos)
 	local x,y = playerPos.x - 10, playerPos.y - 10 
 	local options = {
@@ -141,7 +142,6 @@ function Game.addToWorld(player, enemies, level)
 
 	for _,enemy in ipairs(enemies) do
 		World:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
-		-- enemy:start()
 	end
 end;
 
@@ -180,7 +180,7 @@ function Game:reset()
 
 	self.level = self.loadLevel(self.maps[self.levelIndex], self.tileSize)
 	self.player = self:loadPlayer()
-	self.enemies = loadEnemies(self.levelIndex, self.tileSize)
+	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player)
 	self.addToWorld(self.player, self.enemies, self.level)
 end;
 
@@ -303,12 +303,32 @@ end;
 
 function Game:draw()
 	shove.beginDraw()
-	love.graphics.push()
 
-	-- camera smoothing
+	love.graphics.push()
 	love.graphics.translate(-math.floor(self.camera.x), -math.floor(self.camera.y))
 
-	-- parallax scrolling background
+	self:drawBackground()
+
+	shove.beginLayer("level")
+	self:drawTiles()
+	for _,enemy in ipairs(self.enemies) do
+		enemy:draw()
+	end
+	self.player:draw()
+	if self.showUnluckyMessage then
+		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
+	end
+	if self.drawHitboxes then
+		self:drawCollision()
+	end
+	shove.endLayer()
+	love.graphics.pop()
+	self:drawUI()
+	shove.endDraw()
+end;
+
+function Game:drawBackground()
+		-- parallax scrolling background
 	for i,layer in ipairs(self.parallax.layers) do
 		shove.beginLayer(layer.name)
 		local offsetX = self.parallax.currentX * layer.depth
@@ -327,30 +347,6 @@ function Game:draw()
 		end
 		shove.endLayer()
 	end
-
-	shove.beginLayer("everything_else")
-	self:drawTiles()
-	for _,enemy in ipairs(self.enemies) do
-		enemy:draw()
-	end
-	self.player:draw()
-	if self.showUnluckyMessage then
-		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
-	end
-	if self.drawHitboxes then
-		self:drawCollision()
-	end
-
-	shove.endLayer()
-	love.graphics.pop()
-
-	-- ui, drawn independently from camera/scroll
-	shove.beginLayer("ui")
-	self.unluckyMeter:draw()
-	local hp = tostring(self.player.health)
-	love.graphics.print("health: " .. hp, 10, 10)
-	shove.endLayer()
-	shove.endDraw()
 end;
 
 function Game:drawTiles()
@@ -366,6 +362,14 @@ function Game:drawCollision()
 		love.graphics.rectangle("line", x, y, w, h)
 	end
 	love.graphics.setColor(1,1,1,1)
+end;
+
+function Game:drawUI()
+	shove.beginLayer("ui")
+	self.unluckyMeter:draw()
+	local hp = tostring(self.player.health)
+	love.graphics.print("health: " .. hp, 10, 10)
+	shove.endLayer()
 end;
 
 return Game
