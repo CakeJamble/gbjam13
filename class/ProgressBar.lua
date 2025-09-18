@@ -37,8 +37,9 @@ function ProgressBar:tweenUnlucky(duration)
 		:oncomplete(function() Signal.emit('OnUnlucky') end)
 end;
 
-function ProgressBar:tweenLucky(duration)
-	self.tween = flux.to(self.meterOptions, duration, {height = 0})
+function ProgressBar:tweenLucky(duration, value)
+	local height = self.meterOptions.height
+	self.tween = flux.to(self.meterOptions, duration, {height = math.min(0, height + value)})
 end;
 
 function ProgressBar:stop()
@@ -48,6 +49,7 @@ end;
 ---@param amount integer
 function ProgressBar:increaseMeter(amount)
 	self.meterOptions.value = math.min(self.max, self.meterOptions.value + amount)
+	self:tweenLucky(1, self.meterOptions.value)
 end;
 
 ---@param amount integer
@@ -61,10 +63,17 @@ function ProgressBar:reset()
 	self.meterOptions.value = 0
 end;
 
-function ProgressBar:draw(scale)
-	local x,y = self.pos.x * scale, self.pos.y * scale
-	local cw,ch = self.containerOptions.width * scale, self.containerOptions.height * scale
-	local mw,mh = self.meterOptions.width * scale, self.meterOptions.height * scale
+function ProgressBar:update(dt)
+	if self.isUnlucky and self.meterOptions.height > -self.containerOptions.height then
+		self.isUnlucky = false
+		Signal.emit("OnUnluckyEnd")
+	end
+end;
+
+function ProgressBar:draw()
+	local x,y = self.pos.x , self.pos.y
+	local cw,ch = self.containerOptions.width , self.containerOptions.height 
+	local mw,mh = self.meterOptions.width , self.meterOptions.height 
 	love.graphics.setColor(240/255, 225/255, 209/255)
 	love.graphics.rectangle(self.containerOptions.mode, x, y, cw, ch)
 	love.graphics.setColor(217/255, 151/255, 65/255)

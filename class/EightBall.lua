@@ -21,10 +21,6 @@ function EightBall:init(data)
 	self.damage = 1
 end;
 
-function EightBall:start()
-	print('placeholder')
-end
-
 function EightBall:onCollision(other)
 	other:takeDamage(self.damage)
 end;

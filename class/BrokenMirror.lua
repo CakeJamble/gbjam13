@@ -13,6 +13,7 @@ function BrokenMirror:init(data)
 	local sprite = createAnimation(BrokenMirror.sprite, 16, 16)
 	sprite.loop = true
 	self.animations.idle = sprite
+	self:start()
 end;
 
 function BrokenMirror:start()

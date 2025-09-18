@@ -59,6 +59,7 @@ function Player:takeDamage(amount)
 
 		if self.health < 1 then
 			self:resetPosition()
+			self.health = 3
 
 			-- play death/reset sfx
 		else

@@ -2,7 +2,8 @@ local enemyTypes = require("level.enemy_registry")
 
 ---@param levelIndex integer
 ---@param tileSize integer
-local function loadEnemies(levelIndex, tileSize)
+---@param player Player
+local function loadEnemies(levelIndex, tileSize, player)
 	local path = 'level.enemy.level_' .. levelIndex
 	local enemies = {}
 	local enemiesData = require(path)
@@ -11,6 +12,13 @@ local function loadEnemies(levelIndex, tileSize)
 		local EnemyClass = enemyTypes[data.type]
 		if EnemyClass then
 			data.x, data.y = data.x * tileSize, data.y * tileSize
+
+			-- give mask a ref to the player
+			if data.type == "Mask" then
+				print('loading player position')
+				data.player = player
+			end
+
 			local enemy = EnemyClass(data)
 			table.insert(enemies, enemy)
 		else

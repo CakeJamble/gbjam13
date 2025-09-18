@@ -29,6 +29,8 @@ function Calendar:init(data)
 	self.offsetY = 0
 	self:tweenUp()
 	self.spriteOffsets = {x = 16, y = 16}
+
+	self:start()
 end;
 
 function Calendar:start()

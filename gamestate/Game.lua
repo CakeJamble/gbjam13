@@ -46,7 +46,7 @@ end;
 ---@param previous table Previously active State
 function Game:enter(previous)
 	self.parallax = self.initBG()
-	self.enemies = loadEnemies(self.levelIndex, self.tileSize)
+	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player)
 	local tileMap = self.maps[self.levelIndex]
 	World = bump.newWorld(self.tileSize)
 	self.level = self.loadLevel(tileMap, self.tileSize)
@@ -92,7 +92,7 @@ function Game.initBG()
 end;
 
 function Game.initUnluckyMeter(playerPos)
-	local x,y = playerPos.x + 10, playerPos.y + 10 
+	local x,y = playerPos.x - 10, playerPos.y - 10 
 	local options = {
 		x = x,
 		y = y,
@@ -141,7 +141,7 @@ function Game.addToWorld(player, enemies, level)
 
 	for _,enemy in ipairs(enemies) do
 		World:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
-		enemy:start()
+		-- enemy:start()
 	end
 end;
 
@@ -279,6 +279,7 @@ function Game:update(dt)
 		self.soundManager:update(dt)
 		self:updateCamera(dt)
 		self:updateParallax(dt)
+		self.unluckyMeter:update(dt)
 	end
 end;
 
@@ -345,7 +346,7 @@ function Game:draw()
 
 	-- ui, drawn independently from camera/scroll
 	shove.beginLayer("ui")
-	-- self.unluckyMeter:draw()
+	self.unluckyMeter:draw()
 	local hp = tostring(self.player.health)
 	love.graphics.print("health: " .. hp, 10, 10)
 	shove.endLayer()
