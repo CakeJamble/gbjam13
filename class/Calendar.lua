@@ -78,7 +78,6 @@ end;
 ---@param dt number
 function Calendar:update(dt)
 	Entity.update(self, dt)
-	flux.update(dt)
 
 	local goalX = self.pos.x
 	local goalY = self.baseY + self.offsetY

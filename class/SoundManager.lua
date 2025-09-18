@@ -35,6 +35,19 @@ function SoundManager:play(key)
 	return sound
 end;
 
+---@param key string
+---@return love.Source?
+function SoundManager:get(key)
+	local variants = self.sounds[key]
+	if not variants or #variants == 0 then return end
+
+	local i = love.math.random(#variants)
+	local base = variants[i]
+	local sound = base:clone()
+	sound:setVolume(self.volume)
+	return sound
+end;
+
 ---@param v number
 function SoundManager:setVolume(v)
 	self.volume = v

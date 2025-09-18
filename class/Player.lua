@@ -247,7 +247,9 @@ end;
 function Player:draw()
 	if self.vis then
 		self:drawSprite()
-		self.gun:draw()
+		if self.gun then
+			self.gun:draw()
+		end
 	end
 end;
 

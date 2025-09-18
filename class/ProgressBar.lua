@@ -29,7 +29,7 @@ function ProgressBar:init(options)
 		value = 0
 	}
 	self.tween = nil
-	self:tweenUnlucky(2)
+	self:tweenUnlucky(15)
 end;
 
 function ProgressBar:tweenUnlucky(duration)

@@ -99,7 +99,36 @@ local palettes = {
       {195/255,196/255,165/255},
       {227/255,230/255,201/255}
     }
-  }
+  },
+  {
+    name = "palette1",
+    colors = {
+      {218/255, 211/255, 175/255}, -- #dad3af
+      {44/255, 30/255, 116/255},   -- #2c1e74
+      {194/255, 58/255, 115/255},  -- #c23a73
+      {213/255, 136/255, 99/255},  -- #d58863
+    }
+  },
+
+  {
+    name = "palette2",
+    colors = {
+      {33/255, 30/255, 32/255},    -- #211e20
+      {85/255, 85/255, 104/255},   -- #555568
+      {160/255, 160/255, 139/255}, -- #a0a08b
+      {233/255, 239/255, 236/255}, -- #e9efec
+    }
+  },
+
+  {
+    name = "palette3",
+    colors = {
+      {44/255, 23/255, 0/255},     -- #2c1700
+      {4/255, 126/255, 96/255},    -- #047e60
+      {182/255, 37/255, 88/255},   -- #b62558
+      {174/255, 223/255, 30/255},  -- #aedf1e
+    }
+  },
 }
 
 local lookup_palette = function(name)
@@ -107,6 +136,12 @@ local lookup_palette = function(name)
     if palette.name == name then
       return palette
     end
+  end
+end
+
+local get_name = function(index)
+  if index > 0 and index < 12 then
+    return palettes[index].name
   end
 end
 
@@ -157,6 +192,7 @@ return function(moonshine)
     name = "dmg",
     shader = shader,
     setters = setters,
-    defaults = {palette = "yames"}
+    defaults = {palette = "yames"},
+    getName = get_name
   }
 end

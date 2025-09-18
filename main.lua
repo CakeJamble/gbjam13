@@ -2,6 +2,7 @@ Gamestate = require('lib.hump.gamestate')
 shove = require('lib.shove')
 Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
+local flux = require('lib.flux')
 local loadAudio = require('util.audio_loader')
 local moonshine = require('lib.moonshine')
 
@@ -49,6 +50,8 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
 	DMG = moonshine.effects.dmg()
 	shove.addGlobalEffect(DMG.shader)
 	ShaderIndex = 1
+	PaletteOpacity = {visible = false, a = 1}
+	shove.createLayer("palette", {zIndex = 20000})
 
 
 	----- Text Boxes & Frames
@@ -71,7 +74,6 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
 
 	----- Game Mechanics
 	Gravity = 500
-
 	----- Music
 	AllSounds = {sfx = {}, music = {}}
 	local musicDir = 'asset/audio/music'
@@ -81,12 +83,13 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
 
 	----- Gamestates
 	States = {
-		MainMenu = require('gamestate.MainMenu'),
+		TitleScreen = require('gamestate.TitleScreen'),
+		SplashScreen = require('gamestate.SplashScreen'),
 		Game = require('gamestate.Game')
 		-- ...
 	}
 	Gamestate.registerEvents()
-	Gamestate.switch(States["MainMenu"])
+	Gamestate.switch(States["TitleScreen"])
 end;
 
 function love.gamepadpressed(joystick, button)
@@ -100,10 +103,27 @@ function love.gamepadpressed(joystick, button)
 end;
 
 function love.keypressed(key)
-	if key == "tab" then
+	if key == "tab" and PaletteOpacity.visible == false then
 		ShaderIndex = ShaderIndex + 1
-		if ShaderIndex > 0 then
-			DMG.setters.palette(ShaderIndex % 8)
-		end
+		DMG.setters.palette(1 + (ShaderIndex % 11))
+		PaletteOpacity.visible = true
+		PaletteTween = flux.to(PaletteOpacity, 1, {a = 0})
+			:oncomplete(function() 
+				PaletteOpacity.visible = false
+				PaletteOpacity.a = 1
+			end)
+	end
+end;
+
+function love.update(dt)
+	flux.update(dt)
+end;
+
+function love.draw()
+	if PaletteOpacity.visible then
+		local paletteName = DMG.getName(ShaderIndex)
+		love.graphics.setColor(1,1,1,PaletteOpacity.a)
+		love.graphics.print(paletteName)
+		love.graphics.setColor(1,1,1,1)
 	end
 end;
