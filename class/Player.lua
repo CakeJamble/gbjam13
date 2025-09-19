@@ -55,25 +55,24 @@ end;
 
 ---@param amount integer
 function Player:takeDamage(amount)
-	if self.canTakeDamage then
+	if self.canTakeDamage and not self.dead then
 		amount = amount or 1
-		self.health = self.health - amount
-
+		self.health = math.max(0, self.health - amount)
+		self.currentAnimationTag = "stun"
 		if self.health < 1 then
-			Signal.emit("OnDeath")
-			-- self:resetPosition()
-			-- self.health = 3
-
-			-- play death/reset sfx
+			self.dead = true
+			local deathSFX = self.sfx:play("death")
+			local t = deathSFX:getDuration()
+			Timer.after(t, function() Signal.emit("OnDeath") end)
 		else
 			self.canTakeDamage = false
 			self:stumbleAndBlink()
-			-- play damage noise
 		end
 	end
 end;
 
 function Player:stumbleAndBlink()
+	self.sfx:play("stun")
 	local knockback = -self.moveDir * 16
 	local px = self.pos.x
 	flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
@@ -104,7 +103,7 @@ function Player:initAnimations(dir, animations)
 	for _,animName in ipairs(animations) do
 		local image = love.graphics.newImage(dir .. animName .. ".png")
 		local animation = createAnimation(image, self.dims.w, self.dims.h)
-		animation.loop = animName ~= "jump"
+		animation.loop = animName ~= "jump" and animName ~= "look_up" and animName ~= "look_down" and anim ~= "in_light"
 		result[animName] = animation
 	end
 
@@ -122,81 +121,95 @@ end;
 ---@param joystick string
 ---@param button string
 function Player:gamepadpressed(joystick, button)
-	if button == 'dpleft' then
-		self.moveDir = -1
-		self.facing = -1
-		self:tweenCamera("base")
-		self.currentAnimationTag = "walk"
-	elseif button == 'dpright' then
-		self.moveDir = 1
-		self.facing = 1
-		self:tweenCamera("base")
-		self.currentAnimationTag = "walk"
-	elseif button == 'dpup' then
-		if self.moveDir == 0 then
-			self:tweenCamera("max", -1)
+	if self.dead == false then
+		if button == 'dpleft' then
+			self.moveDir = -1
+			self.facing = -1
+			self:tweenCamera("base")
+			self.currentAnimationTag = "walk"
+		elseif button == 'dpright' then
+			self.moveDir = 1
+			self.facing = 1
+			self:tweenCamera("base")
+			self.currentAnimationTag = "walk"
+		elseif button == 'dpup' then
+			if self.moveDir == 0 then
+				self.currentAnimationTag = "look_up"
+				self:tweenCamera("max", -1)
+			end
+		elseif button == 'dpdown' then
+			if self.moveDir == 0 then
+				self.currentAnimationTag = "look_down"
+				self:tweenCamera("max", 1)
+			end
+		elseif button == 'a' then
+			self:jump()
 		end
-	elseif button == 'dpdown' then
-		if self.moveDir == 0 then
-			self:tweenCamera("max", 1)
-		end
-	elseif button == 'a' then
-		self:jump()
-	end
 
-	self.gun:gamepadpressed(joystick, button)
+		self.gun:gamepadpressed(joystick, button)
+	end
 end;
 
 ---@param key string
 function Player:keypressed(key)
-	if key == "left" then
-		self.moveDir = -1
-		self.facing = -1
-		self:tweenCamera("base")
-		self.currentAnimationTag = "walk"
-	elseif key == "right" then
-		self.moveDir = 1
-		self.facing = 1
-		self:tweenCamera("base")
-		self.currentAnimationTag = "walk"
-	elseif key == "up" then
-		if self.moveDir == 0 then
-			self:tweenCamera("max", -1)
+	if not self.dead then
+		if key == "left" then
+			self.moveDir = -1
+			self.facing = -1
+			self:tweenCamera("base")
+			self.currentAnimationTag = "walk"
+		elseif key == "right" then
+			self.moveDir = 1
+			self.facing = 1
+			self:tweenCamera("base")
+			self.currentAnimationTag = "walk"
+		elseif key == "up" then
+			if self.moveDir == 0 then
+				self.currentAnimationTag = "look_up"
+				self:tweenCamera("max", -1)
+			end
+		elseif key == "down" then
+			if self.moveDir == 0 then
+				self.currentAnimationTag = "look_down"
+				self:tweenCamera("max", 1)
+			end
+		elseif key == "z" then
+			self:jump()
 		end
-	elseif key == "down" then
-		if self.moveDir == 0 then
-			self:tweenCamera("max", 1)
-		end
-	elseif key == "z" then
-		self:jump()
-	end
 
-	self.gun:keypressed(key)
+		self.gun:keypressed(key)
+	end
 end;
 
 ---@param joystick string
 ---@param button string
 function Player:gamepadreleased(joystick, button)
-	if button == 'dpleft' or button == 'dpright' then
-		self.moveDir = 0
-		self.currentAnimationTag = "idle"
-	elseif button == 'dpup' or button == 'dpdown' then
-		self:tweenCamera("base")
-	end
+	if not self.dead then
+		if button == 'dpleft' or button == 'dpright' then
+			self.moveDir = 0
+			self.currentAnimationTag = "idle"
+		elseif button == 'dpup' or button == 'dpdown' then
+			self.currentAnimationTag = "idle"
+			self:tweenCamera("base")
+		end
 
-	self.gun:gamepadreleased(joystick, button)
+		self.gun:gamepadreleased(joystick, button)
+	end
 end;
 
 ---@param key string
 function Player:keyreleased(key)
-	if key == "left" or key == "right" then
-		self.moveDir = 0
-		self.currentAnimationTag = "idle"
-	elseif key == "up" or key == "down" then
-		self:tweenCamera("base")
-	end
+	if not self.dead then
+		if key == "left" or key == "right" then
+			self.moveDir = 0
+			self.currentAnimationTag = "idle"
+		elseif key == "up" or key == "down" then
+			self:tweenCamera("base")
+			self.currentAnimationTag = "idle"
+		end
 
-	self.gun:keyreleased(key)
+		self.gun:keyreleased(key)
+	end
 end;
 
 function Player:jump()
@@ -211,12 +224,14 @@ end;
 ---@param dt number
 function Player:update(dt)
 	Entity.update(self, dt)
-	local collisionInfo = self:updatePosition(dt)
-	self:handleCollision(collisionInfo)
-	self.gun.pos.x = self.pos.x
-	self.gun.pos.y = self.pos.y
-	self.gun:update(dt)
 	self.sfx:update(dt)
+	if not self.dead then
+		local collisionInfo = self:updatePosition(dt)
+		self:handleCollision(collisionInfo)
+		self.gun.pos.x = self.pos.x
+		self.gun.pos.y = self.pos.y
+		self.gun:update(dt)
+	end
 end;
 
 ---@param collisionInfo table

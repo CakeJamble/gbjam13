@@ -1,5 +1,6 @@
 local createAnimation = require('util.create_animation')
 local flux = require('lib.flux')
+local Signal = require('lib.hump.signal')
 local Entity = require('class.Entity')
 local Timer = require('lib.hump.timer')
 local Class = require('lib.hump.class')
@@ -31,6 +32,14 @@ function Calendar:init(data)
 	self.spriteOffsets = {x = 16, y = 16}
 
 	self:start()
+
+	-- Signal.register("EndLevel", function()
+	-- 	print('here')
+	-- 	for i,projectile in ipairs(self.projectiles) do
+	-- 		self.world:remove(projectile)
+	-- 		table.remove(self.projectiles, i)
+	-- 	end
+	-- end)
 end;
 
 function Calendar:start()
@@ -55,10 +64,11 @@ function Calendar:shoot(projectileSprite)
 		h = 8,
 		speed = {x = -200, y = 0},
 		damage = 1,
-		sprite = projectileSprite
+		sprite = projectileSprite,
+		world = self.world
 	}
 	local projectile = Projectile(data)
-	World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
+	self.world:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
 	table.insert(self.projectiles, projectile)
 end;
 
@@ -82,7 +92,7 @@ function Calendar:update(dt)
 
 		local goalX = self.pos.x
 		local goalY = self.baseY + self.offsetY
-		local actualX, actualY, cols, len = World:move(self, goalX, goalY)
+		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY)
 		self.pos.x, self.pos.y = actualX, actualY
 
 		for _,col in ipairs(cols) do
@@ -95,7 +105,7 @@ function Calendar:update(dt)
 			projectile:update(dt)
 			if not projectile.active then
 				table.remove(self.projectiles, i)
-				World:remove(projectile)
+				self.world:remove(projectile)
 			end
 		end
 	end

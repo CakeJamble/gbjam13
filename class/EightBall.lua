@@ -33,7 +33,7 @@ function EightBall:update(dt)
 		self.v.y = self.v.y + Gravity * dt
 		local goalX = self.pos.x + self.v.x * dt
 		local goalY = self.pos.y + self.v.y * dt
-		local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY,
 			function(item, other)
 				if other.type == "ground" or other.type == "enemy" then
 					return "slide"
@@ -60,7 +60,7 @@ function EightBall:isAtEdge()
 	local aheadX = self.pos.x + (self.dims.w/2 + 1) * self.moveDir
 	local baseY = self.pos.y + self.dims.h + 1
 
-	local items, len = World:queryRect(aheadX, baseY, 1, 1)
+	local items, len = self.world:queryRect(aheadX, baseY, 1, 1)
 	for _,item in ipairs(items) do
 		if item.type == "ground" then
 			return false

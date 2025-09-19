@@ -6,6 +6,7 @@ local Class = require('lib.hump.class')
 local Gun = Class{sprite = love.graphics.newImage('asset/sprite/player/projectile.png')}
 
 function Gun:init(data)
+	self.world = data.world
 	self.projectiles = {}
 	self.projectileType = data.projectileType
 	self.damage = data.damage or 1
@@ -30,10 +31,11 @@ function Gun:shoot(isUnlucky)
 			},
 			w = 8, h = 8,
 			sprite = Gun.sprite,
-			damage = self.damage
+			damage = self.damage,
+			world = self.world
 		}
 		local projectile = Projectile(pData, self.owner)
-		World:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
+		self.world:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
 		table.insert(self.projectiles, projectile)
 		-- play fire sound
 	end
@@ -84,7 +86,7 @@ function Gun:update(dt)
 		p:update(dt)
 		if not p.active then
 			table.remove(self.projectiles, i)
-			World:remove(p)
+			self.world:remove(p)
 		end
 	end
 end;

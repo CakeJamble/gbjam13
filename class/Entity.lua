@@ -6,6 +6,7 @@ local Entity = Class{}
 
 ---@param data table
 function Entity:init(data)
+  self.world = data.world
   self.type = data.type
   self.pos = {  -- position
     x = data.x,
@@ -73,7 +74,7 @@ function Entity:updatePosition(dt)
 
   local goalX = self.pos.x + self.v.x * dt
   local goalY = self.pos.y + self.v.y * dt
-  local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+  local actualX, actualY, cols, len = self.world:move(self, goalX, goalY,
     function(item, other)
       if other.solid then return "slide" 
       elseif other.type == "item" then 

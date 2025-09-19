@@ -23,7 +23,7 @@ function Clover:update(dt)
 		local offsetY = math.sin(love.timer.getTime() * self.floatSpeed) * self.floatAmplitude
 		local goalX, goalY = self.pos.x, self.pos.y + offsetY
 
-		local actualX, actualY, cols, len = World:move(self, goalX, goalY, 
+		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY, 
 			function(item, other)
 				if other.type == "player" then
 					return "cross" 

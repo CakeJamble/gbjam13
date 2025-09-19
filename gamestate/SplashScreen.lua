@@ -5,6 +5,12 @@ end;
 
 ---@param previous table Previously active State
 function SplashScreen:enter(previous, levelIndex)
+	-- if self.world then
+	-- 	local items = self.world:getItems()
+	-- 	for i=1,#items do
+	-- 		self.world:remove(items[i])
+	-- 	end
+	-- end
 	self.nextLevel = levelIndex or 1
 	shove.createLayer("background", {zIndex = 1})
 	local fname = "splash_screen_" .. self.nextLevel .. ".png"
@@ -45,7 +51,6 @@ end;
 ---@param dt number
 function SplashScreen:update(dt)
 	self.textBox:update(dt)
-	-- cam:update(dt)
 end;
 
 function SplashScreen:draw()

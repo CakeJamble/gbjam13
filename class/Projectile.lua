@@ -5,6 +5,7 @@ local Projectile = Class{}
 
 ---@param data table
 function Projectile:init(data, owner)
+	self.world = data.world
 	self.pos = {x = data.x, y = data.y}
 	self.v = {x = data.speed.x, y = data.speed.y}
 	self.dims = {w = data.w, h = data.h}
@@ -32,7 +33,7 @@ function Projectile:update(dt)
 
 	local goalX = self.pos.x + self.v.x * dt
 	local goalY = self.pos.y + self.v.y * dt
-	local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+	local actualX, actualY, cols, len = self.world:move(self, goalX, goalY,
 		function(item, other)
 			if other == self.owner then
 				return nil

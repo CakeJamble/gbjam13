@@ -12,17 +12,13 @@ local Signal = require('lib.hump.signal')
 local Game = {}
 
 function Game:init()
+	self.tileSize = 8
 	self.drawHitboxes = true
 	shove.createLayer("level", {zIndex = 100})
 	shove.createLayer("ui", {zIndex = 1000})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
 	self.maps = loadMaps()
-	self.levelIndex = 1
-	self.tileSize = 16
-	self.showDebug = false
 	Gravity = 500
-	self.zoomValue = 4
-	self.numVisible = 0
 	self.soundManager = SoundManager(AllSounds.music)
 	self.paused = false
 	self.showUnluckyMessage = false
@@ -45,35 +41,67 @@ function Game:init()
 	Signal.register("OnLampCollision", function(amount, dt)
 		local val = amount * dt
 		self.unluckyMeter:tweenLucky(dt, val)
+		self.player.currentAnimationTag = "in_light"
 	end)
 	Signal.register("EndLevel",function()
 		self.levelIndex = self.levelIndex + 1
 		print(self.levelIndex)
+		self.checkCollision = false
+		self.player.dead = true
 		self.song:stop()
+	-- 	if self.world then
+	-- 	local items = self.world:getItems()
+	-- 	for i=1,#items do
+	-- 		self.world:remove(items[i])
+	-- 	end
+	-- end
 		Gamestate.switch(States["SplashScreen"], self.levelIndex)
 	end)
 	Signal.register("OnDeath", function()
 		self.song:stop()
 		self.levelIndex = 1
+
+		self.checkCollision = false
+		local items = self.world:getItems()
+		for _,item in ipairs(items) do
+			self.world:remove(item)
+		end
+
 		Gamestate.switch(States["TitleScreen"])
 	end)
 end;
 
 ---@param previous table Previously active State
 function Game:enter(previous, levelIndex)
+	if self.level then
+	    for i,tile in ipairs(self.level) do
+	        table.remove(self.level, i)
+	    end
+	end
+
+	if self.enemies then
+	    for i,enemy in ipairs(self.enemies) do
+	        table.remove(self.enemies, i)
+	    end
+	end
+
+	if self.player then self.player = nil end
+	self.world = bump.newWorld(self.tileSize)
+	self.checkCollision = true
 	self.player = self:loadPlayer()
 	self.levelIndex = levelIndex
 	self.parallax = self.initBG()
-	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player)
+	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
 	local tileMap = self.maps[self.levelIndex]
-	World = bump.newWorld(self.tileSize)
-	self.level = self.loadLevel(tileMap, self.tileSize)
+
+	print(#self.enemies)
+
+	self.level = self:loadLevel(tileMap, self.tileSize)
 	self.levelWidth = self.tileSize * #self.level[1]
 	self.levelHeight = self.tileSize * #self.level
-	self.addToWorld(self.player, self.enemies, self.level)
+	self:addToWorld()
 	local songName = "level_" .. self.levelIndex
 	self.song = self.soundManager.sounds[songName][1]
-	-- self.soundManager:play(songName)
 	self.song:play()
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 end;
@@ -141,35 +169,34 @@ function Game:loadPlayer()
 		}
 	}
 	local player = Player(playerData)
+	player.world = self.world
 	local startGun = Gun({
 		x=x,y=y,
 		w = 25, h = 18,
 		damage=1,
 		speed={x=200,y=200},
-		owner = player
+		owner = player,
+		world = self.world
 	})
 	player:setGun(startGun)
 	return player
 end;
 
----@param player Player
----@param enemies Entity[]
----@param level Tile[]
-function Game.addToWorld(player, enemies, level)
-	for _,tile in ipairs(level) do
-		World:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
+function Game:addToWorld()
+	for _,tile in ipairs(self.level) do
+		self.world:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
 	end
 
-	World:add(player, player.pos.x, player.pos.y, player.dims.w, player.dims.h)
+	self.world:add(self.player, self.player.pos.x, self.player.pos.y, self.player.dims.w, self.player.dims.h)
 
-	for _,enemy in ipairs(enemies) do
-		World:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
+	for _,enemy in ipairs(self.enemies) do
+		self.world:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
 	end
 end;
 
 ---@param tileMap table
 ---@param tileSize integer
-function Game.loadLevel(tileMap, tileSize)
+function Game:loadLevel(tileMap, tileSize)
 	local tiles = {}
 
 	-- map collision
@@ -186,24 +213,13 @@ function Game.loadLevel(tileMap, tileSize)
 					h = 8,
 				}
 				local tile = TileClass(data)
+				tile.world = self.world
 				table.insert(tiles, tile)
 			end
 		end
 	end
 
 	return tiles
-end;
-
-function Game:reset()
-	for _, obj in ipairs(World:getItems()) do
-		World:remove(obj)
-	end
-
-
-	self.level = self.loadLevel(self.maps[self.levelIndex], self.tileSize)
-	self.player = self:loadPlayer()
-	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player)
-	self.addToWorld(self.player, self.enemies, self.level)
 end;
 
 ---@param joystick string
@@ -274,7 +290,7 @@ function Game:countVisibleObj()
 	local view = {x=x,y=y,width=width,height=height}
 	local count = 0
 
-	for _,item in ipairs(World:getItems()) do
+	for _,item in ipairs(self.world:getItems()) do
 		if self:isInView(item, view) then
 			count = count + 1
 		end
@@ -285,28 +301,28 @@ end;
 ---@param dt number
 function Game:update(dt)
 	Timer.update(dt)
-	if not self.paused then
-		if self.showUnluckyMessage then
-			self.unluckyMessageBox:update(dt)
-		end
-
-		for _,tile in ipairs(self.level) do
-			if tile.update then
-				tile:update(dt)
+	if self.checkCollision then
+		if not self.paused then
+			if self.showUnluckyMessage then
+				self.unluckyMessageBox:update(dt)
 			end
-		end
-		for _,enemy in ipairs(self.enemies) do
-			enemy:update(dt)
-		end
-		self.player:update(dt)
-		if self.player.health == 0 then
-			self:reset()
-		end
 
-		self.soundManager:update(dt)
-		self:updateCamera(dt)
-		self:updateParallax(dt)
-		self.unluckyMeter:update(dt)
+			for _,tile in ipairs(self.level) do
+				if tile.update then
+					tile:update(dt)
+				end
+			end
+			for _,enemy in ipairs(self.enemies) do
+				enemy:update(dt)
+			end
+
+			self.player:update(dt)
+
+			self.soundManager:update(dt)
+			self:updateCamera(dt)
+			self:updateParallax(dt)
+			self.unluckyMeter:update(dt)
+		end
 	end
 end;
 
@@ -389,8 +405,8 @@ end;
 
 function Game:drawCollision()
 	love.graphics.setColor(1, 0, 0, 0.5)
-	for _,item in ipairs(World:getItems()) do
-		local x, y, w, h = World:getRect(item)
+	for _,item in ipairs(self.world:getItems()) do
+		local x, y, w, h = self.world:getRect(item)
 		love.graphics.rectangle("line", x, y, w, h)
 	end
 	love.graphics.setColor(1,1,1,1)
