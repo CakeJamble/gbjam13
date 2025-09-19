@@ -1,4 +1,6 @@
+local SoundManager = require('class.SoundManager')
 local Projectile = require('class.Projectile')
+local Signal = require('lib.hump.signal')
 local Class = require('lib.hump.class')
 
 ---@class Gun
@@ -6,6 +8,7 @@ local Class = require('lib.hump.class')
 local Gun = Class{sprite = love.graphics.newImage('asset/sprite/player/projectile.png')}
 
 function Gun:init(data)
+	self.sfx = SoundManager(AllSounds.sfx.player)
 	self.world = data.world
 	self.projectiles = {}
 	self.projectileType = data.projectileType
@@ -16,11 +19,13 @@ function Gun:init(data)
 	self.direction = {x=1,y=0}
 	self.isUnlucky = false
 	self.owner = data.owner
+
+	Signal.register("OnUnluckyEnd", function() self.isUnlucky = false end)
 end;
 
 function Gun:shoot(isUnlucky)
 	if self.isUnlucky then
-		-- play dud sound
+		self.sfx:play("misfire")
 	else
 		local pData = {
 			x = self.direction.x * self.dims.w + self.pos.x,
@@ -37,7 +42,7 @@ function Gun:shoot(isUnlucky)
 		local projectile = Projectile(pData, self.owner)
 		self.world:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
 		table.insert(self.projectiles, projectile)
-		-- play fire sound
+		self.sfx:play("shoot")
 	end
 end;
 

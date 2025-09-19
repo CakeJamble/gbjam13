@@ -121,7 +121,7 @@ end;
 
 function love.draw()
 	if PaletteOpacity.visible then
-		local paletteName = DMG.getName(ShaderIndex)
+		local paletteName = DMG.getName(1 + (ShaderIndex % 11))
 		love.graphics.setColor(1,1,1,PaletteOpacity.a)
 		love.graphics.print(paletteName)
 		love.graphics.setColor(1,1,1,1)

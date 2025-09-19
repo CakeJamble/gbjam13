@@ -48,6 +48,7 @@ function Player:init(data)
 			self.isUnlucky = true
 			self.gun.isUnlucky = true
 		end)
+	Signal.register("OnUnluckyEnd", function() self.isUnlucky = false end)
 end;
 
 ---@param gun Gun

@@ -50,9 +50,8 @@ function Mask:init(data)
 
 	Signal.register("OnUnluckyEnd",
 		function()
-			print('its over')
 			self.swoopTimer:clear()
-			self.tween:stop()
+			if self.tween then self.tween:stop() end
 		end)
 end;
 

@@ -51,10 +51,6 @@ function Calendar:onCollision(player)
 	player:takeDamage(self.damage)
 end;
 
-function Calendar:takeDamage(amount)
-	self.health = self.health - 1
-end;
-
 ---@param projectileSprite love.Image
 function Calendar:shoot(projectileSprite)
 	local data = {
@@ -92,7 +88,12 @@ function Calendar:update(dt)
 
 		local goalX = self.pos.x
 		local goalY = self.baseY + self.offsetY
-		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY)
+		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY,
+						function(item, other)
+				if other.type == "player" then
+					return "cross"
+				end
+			end)
 		self.pos.x, self.pos.y = actualX, actualY
 
 		for _,col in ipairs(cols) do

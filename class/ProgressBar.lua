@@ -44,6 +44,7 @@ function ProgressBar:tweenUnlucky(duration, value)
 end;
 
 function ProgressBar:tweenLucky(duration, value)
+	Signal.emit("OnUnluckyEnd")
 	local curr = self.meterOptions.height
 	local target = math.min(0, curr + value)
 
@@ -69,6 +70,7 @@ end;
 ---@param amount integer
 function ProgressBar:decreaseMeter(amount)
 	self.meterOptions.value = math.max(self.min, self.meterOptions.value - amount)
+	Signal.emit("OnUnluckyEnd")
 end;
 
 function ProgressBar:reset()
@@ -80,7 +82,6 @@ end;
 function ProgressBar:update(dt)
 	if self.isUnlucky and self.meterOptions.height > -self.containerOptions.height then
 		self.isUnlucky = false
-		Signal.emit("OnUnluckyEnd")
 	end
 end;
 
