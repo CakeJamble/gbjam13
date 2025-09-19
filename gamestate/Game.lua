@@ -49,12 +49,6 @@ function Game:init()
 		self.checkCollision = false
 		self.player.dead = true
 		self.song:stop()
-	-- 	if self.world then
-	-- 	local items = self.world:getItems()
-	-- 	for i=1,#items do
-	-- 		self.world:remove(items[i])
-	-- 	end
-	-- end
 		Gamestate.switch(States["SplashScreen"], self.levelIndex)
 	end)
 	Signal.register("OnDeath", function()
@@ -94,8 +88,6 @@ function Game:enter(previous, levelIndex)
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
 	local tileMap = self.maps[self.levelIndex]
 
-	print(#self.enemies)
-
 	self.level = self:loadLevel(tileMap, self.tileSize)
 	self.levelWidth = self.tileSize * #self.level[1]
 	self.levelHeight = self.tileSize * #self.level
@@ -104,6 +96,8 @@ function Game:enter(previous, levelIndex)
 	self.song = self.soundManager.sounds[songName][1]
 	self.song:play()
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
+	self.world:add(self.unluckyMeter, self.unluckyMeter.pos.x, self.unluckyMeter.pos.y,
+		self.unluckyMeter.containerOptions.width, self.unluckyMeter.containerOptions.height)
 end;
 
 -- From shove tutorial on parallax scrolling
@@ -132,7 +126,7 @@ function Game.initBG()
   		depth = layer.depth,
   		name = layer.name,
   		scale = scale,
-  		zIndex = 90 - (1 * 10) -- zIndex goes up -> closer to foreground
+  		zIndex = 90 - (1 * 2) -- zIndex goes up -> closer to foreground
   	}
 
   	shove.createLayer(layer.name, {zIndex = parallax.layers[i].zIndex})
@@ -272,32 +266,6 @@ function Game:keyreleased(key)
 	end
 end;
 
-function Game:isInView(obj, viewport)
-  local x = obj.pos.x or obj.x
-  local y = obj.pos.y or obj.y
-  local w = obj.dims.w or obj.w
-  local h = obj.dims.h or obj.h
-  return not (
-    x + w < viewport.x or
-    x > viewport.x + viewport.width or
-    y + h < viewport.y or
-    y > viewport.y + viewport.height
-  )
-end;
-
-function Game:countVisibleObj()
-	local x, y, width, height = shove.getViewport()
-	local view = {x=x,y=y,width=width,height=height}
-	local count = 0
-
-	for _,item in ipairs(self.world:getItems()) do
-		if self:isInView(item, view) then
-			count = count + 1
-		end
-	end
-	return count
-end;
-
 ---@param dt number
 function Game:update(dt)
 	Timer.update(dt)
@@ -334,9 +302,10 @@ function Game:updateCamera(dt)
 end;
 
 function Game:updateParallax(dt)
-	-- for time based animation like rain
+	-- -- for time based animation like rain
 	-- self.parallax.time = self.parallax.time + dt
 	-- self.parallax.currentX = math.sin(self.parallax.time * self.parallax.speed) * self.parallax.scrollAmplitude
+
 	-- for movement based animation like scrolling bg
 	if not self.player.isBlocked then
 		self.parallax.currentX = self.parallax.currentX + self.player.moveDir * self.player.speed * dt
@@ -346,7 +315,7 @@ end;
 
 function Game:draw()
 	shove.beginDraw()
-
+	-- outside the push/pop so that it ignores camera
 	love.graphics.push()
 	love.graphics.translate(-math.floor(self.camera.x), -math.floor(self.camera.y))
 
@@ -364,14 +333,9 @@ function Game:draw()
 	if self.drawHitboxes then
 		self:drawCollision()
 	end
-	shove.endLayer()
-
-	love.graphics.pop()
-	
-	shove.beginLayer("ui")
 	self:drawUI()
 	shove.endLayer()
-	
+	love.graphics.pop()
 	shove.endDraw()
 end;
 
@@ -413,9 +377,7 @@ function Game:drawCollision()
 end;
 
 function Game:drawUI()
-	self.unluckyMeter:draw()
-	local hp = tostring(self.player.health)
-	love.graphics.print("health: " .. hp, 10, 10)
+	self.unluckyMeter:draw(self.player.pos.x - 7, self.player.pos.y - 10)
 end;
 
 return Game

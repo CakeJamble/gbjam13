@@ -7,6 +7,8 @@ local ProgressBar = Class{}
 
 ---@param options {[string]: any }
 function ProgressBar:init(options)
+	options.w = options.w/2
+	options.h = options.h/2
 	self.isUnlucky = false
 	self.pos = {
 		x = options.x,
@@ -82,8 +84,8 @@ function ProgressBar:update(dt)
 	end
 end;
 
-function ProgressBar:draw()
-	local x,y = self.pos.x , self.pos.y
+function ProgressBar:draw(x, y)
+	-- local x,y = self.pos.x , self.pos.y
 	local cw,ch = self.containerOptions.width , self.containerOptions.height 
 	local mw,mh = self.meterOptions.width , self.meterOptions.height 
 	love.graphics.setColor(240/255, 225/255, 209/255)

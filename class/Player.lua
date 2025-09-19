@@ -40,6 +40,8 @@ function Player:init(data)
 	self.stumbleTime = 0.5
 	self.vis = true
 	self.blink = 0
+	self.showHealth = true
+	Timer.after(3, function() self.showHealth = false end)
 
 	Signal.register('OnUnlucky',
 		function()
@@ -72,6 +74,7 @@ function Player:takeDamage(amount)
 end;
 
 function Player:stumbleAndBlink()
+	self.showHealth = true
 	self.sfx:play("stun")
 	local knockback = -self.moveDir * 16
 	local px = self.pos.x
@@ -85,6 +88,7 @@ function Player:stumbleAndBlink()
 			function()
 				self.canTakeDamage = true
 				self.vis = true
+				self.showHealth = false
 			end)
 end;
 
@@ -266,6 +270,9 @@ function Player:draw()
 			self.gun:draw()
 		end
 	end
+	if self.showHealth then
+		self:drawHealth()
+	end
 end;
 
 function Player:drawSprite()
@@ -276,4 +283,9 @@ function Player:drawSprite()
 	love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
 end;
 
+function Player:drawHealth()
+	for i=1, self.health do
+		love.graphics.circle("fill", self.pos.x + i * 8, self.pos.y + self.dims.h + 8, 3)
+	end
+end;
 return Player
