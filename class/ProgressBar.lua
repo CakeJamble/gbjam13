@@ -29,17 +29,29 @@ function ProgressBar:init(options)
 		value = 0
 	}
 	self.tween = nil
-	self:tweenUnlucky(15)
+	self.duration = 15
+	self:tweenUnlucky(self.duration)
 end;
 
-function ProgressBar:tweenUnlucky(duration)
+---@param duration number
+function ProgressBar:tweenUnlucky(duration, value)
+	if self.tween then self.tween:stop() end
+
 	self.tween = flux.to(self.meterOptions, duration, {height = -self.containerOptions.height})
 		:oncomplete(function() Signal.emit('OnUnlucky') end)
 end;
 
 function ProgressBar:tweenLucky(duration, value)
-	local height = self.meterOptions.height
-	self.tween = flux.to(self.meterOptions, duration, {height = math.min(0, height + value)})
+	local curr = self.meterOptions.height
+	local target = math.min(0, curr + value)
+
+	flux.to(self.meterOptions, duration, {height = target})
+	:oncomplete(function()
+		local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
+		local maxDistance = self.containerOptions.height
+		local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+		self:tweenUnlucky(newDuration)
+	end)
 end;
 
 function ProgressBar:stop()

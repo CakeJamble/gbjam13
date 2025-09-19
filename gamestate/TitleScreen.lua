@@ -25,7 +25,9 @@ end;
 
 function TitleScreen:enter(previous)
 	self.bgOptions = {x=0,y=0,a=0}
+	self.song = self.musicManager.sounds["title_screen"][1]
 	self:start()
+	-- self.song:play()
 end;
 
 function TitleScreen.loadPlayer()
@@ -71,7 +73,9 @@ function TitleScreen:start()
 		:delay(1)
 		:onstart(function() 
 			self.lamp.state = "on"
-			self.musicManager:play("title_screen")
+			-- self.musicManager:play("title_screen")
+			self.song:play()
+
 		end)
 		:oncomplete(function()
 			self.canProceed = true
@@ -82,12 +86,14 @@ end;
 
 function TitleScreen:gamepadpressed(joystick, button)
 	if self.canProceed and button == "start" then
+		self.song:stop()
 		Gamestate.switch(States["SplashScreen"])
 	end
 end;
 
 function TitleScreen:keypressed(key)
 	if self.canProceed and key == "return" then
+		self.song:stop()
 		Gamestate.switch(States["SplashScreen"])
 	end
 end;

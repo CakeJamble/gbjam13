@@ -1,3 +1,4 @@
+local Signal = require('lib.hump.signal')
 local Class = require('lib.hump.class')
 
 ---@class Entity
@@ -24,11 +25,14 @@ function Entity:init(data)
   self.currentAnimationTag = "idle"
   self.speed = data.speed or 100
   self.moveDir = data.moveDir or 0
+  self.dead = false
 end;
 
 ---@param dt number
 function Entity:update(dt)
-  self:updateAnimation(dt)
+  if not self.dead then
+    self:updateAnimation(dt)
+  end
 end;
 
 ---@param dt number
@@ -57,7 +61,15 @@ function Entity:updatePosition(dt)
   local goalY = self.pos.y + self.v.y * dt
   local actualX, actualY, cols, len = World:move(self, goalX, goalY,
     function(item, other)
-      if other.solid then return "slide" end
+      if other.solid then return "slide" 
+      elseif other.type == "item" then 
+        if other.name == "Lamp" then
+          Signal.emit("OnLampCollision", 10, dt)
+          return nil
+        else
+          return "cross" 
+        end
+      end
     end)
 
   self.isBlocked = self:checkBlocked()
@@ -76,12 +88,14 @@ function Entity:draw()
 end;
 
 function Entity:drawSprite(spriteOffsets, facing)
-  local xOff, yOff = spriteOffsets.x, spriteOffsets.y
-  local animation = self.animations[self.currentAnimationTag]
-  local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
-  spriteNum = math.min(spriteNum, #animation.quads)
-  local transform = love.math.newTransform(self.pos.x + self.dims.w / 2, self.pos.y + self.dims.h / 2, 0, facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
-  love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
+  if not self.dead then
+    local xOff, yOff = spriteOffsets.x, spriteOffsets.y
+    local animation = self.animations[self.currentAnimationTag]
+    local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
+    spriteNum = math.min(spriteNum, #animation.quads)
+    local transform = love.math.newTransform(self.pos.x + self.dims.w / 2, self.pos.y + self.dims.h / 2, 0, facing, 1, math.floor(0.5 + self.dims.w/ 2), math.floor(0.5 + self.dims.h /2))
+    love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
+  end
 end;
 
 return Entity

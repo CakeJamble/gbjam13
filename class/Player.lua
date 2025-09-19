@@ -41,7 +41,6 @@ function Player:init(data)
 	self.vis = true
 	self.blink = 0
 
-
 	Signal.register('OnUnlucky',
 		function()
 			self.isUnlucky = true
@@ -74,7 +73,7 @@ function Player:takeDamage(amount)
 end;
 
 function Player:stumbleAndBlink()
-	local knockback = -self.moveDir * 50
+	local knockback = -self.moveDir * 16
 	local px = self.pos.x
 	flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
 	self.blinkTween = flux.to(self, self.invulnTime, {blink = 1})

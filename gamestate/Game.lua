@@ -12,9 +12,9 @@ local Signal = require('lib.hump.signal')
 local Game = {}
 
 function Game:init()
-	self.drawHitboxes = false
-	shove.createLayer("level", {zIndex = 1000})
-	shove.createLayer("ui", {zIndex = 1001})
+	self.drawHitboxes = true
+	shove.createLayer("level", {zIndex = 100})
+	shove.createLayer("ui", {zIndex = 1000})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
 	self.maps = loadMaps()
 	self.levelIndex = 1
@@ -39,6 +39,14 @@ function Game:init()
 				self.showUnluckyMessage = false
 			end)
 		end)
+
+	Signal.register('OnGetClover', function(clover)
+		self.unluckyMeter:tweenLucky(1, clover.amount)
+	end)
+	Signal.register("OnLampCollision", function(amount, dt)
+		local val = amount * dt
+		self.unluckyMeter:tweenLucky(dt, val)
+	end)
 end;
 
 ---@param previous table Previously active State
@@ -52,7 +60,9 @@ function Game:enter(previous)
 	self.levelHeight = self.tileSize * #self.level
 	self.addToWorld(self.player, self.enemies, self.level)
 	local songName = "level_" .. self.levelIndex
-	self.soundManager:play(songName)
+	self.song = self.soundManager.sounds[songName][1]
+	-- self.soundManager:play(songName)
+	self.song:play()
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 end;
 
@@ -268,6 +278,11 @@ function Game:update(dt)
 			self.unluckyMessageBox:update(dt)
 		end
 
+		for _,tile in ipairs(self.level) do
+			if tile.update then
+				tile:update(dt)
+			end
+		end
 		for _,enemy in ipairs(self.enemies) do
 			enemy:update(dt)
 		end
@@ -322,8 +337,13 @@ function Game:draw()
 		self:drawCollision()
 	end
 	shove.endLayer()
+
 	love.graphics.pop()
+	
+	shove.beginLayer("ui")
 	self:drawUI()
+	shove.endLayer()
+	
 	shove.endDraw()
 end;
 
@@ -365,11 +385,9 @@ function Game:drawCollision()
 end;
 
 function Game:drawUI()
-	shove.beginLayer("ui")
 	self.unluckyMeter:draw()
 	local hp = tostring(self.player.health)
 	love.graphics.print("health: " .. hp, 10, 10)
-	shove.endLayer()
 end;
 
 return Game
