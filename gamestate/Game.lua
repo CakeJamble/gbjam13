@@ -20,6 +20,7 @@ function Game:init()
 	self.maps = loadMaps()
 	Gravity = 500
 	self.soundManager = SoundManager(AllSounds.music)
+	self.sfxManager = SoundManager(AllSounds.sfx)
 	self.paused = false
 	self.showUnluckyMessage = false
 	self.unluckyMessageBox = Text.new("left", {
@@ -49,7 +50,12 @@ function Game:init()
 		self.checkCollision = false
 		self.player.dead = true
 		self.song:stop()
-		Gamestate.switch(States["SplashScreen"], self.levelIndex)
+		self.unluckyMeter:stop()
+		local sfx = self.sfxManager:play("level_complete")
+		local dur = sfx:getDuration()
+		Timer.after(dur, function()
+			Gamestate.switch(States["SplashScreen"], self.levelIndex)
+		end)
 	end)
 	Signal.register("OnDeath", function()
 		self.song:stop()
