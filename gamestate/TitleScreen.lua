@@ -9,9 +9,7 @@ function TitleScreen:init()
 	self.background = love.graphics.newImage('asset/sprite/title_bg.png')
 	
 	shove.createLayer("foreground", {zIndex = 5})
-	self.player = self.loadPlayer()
-	self.lamp = self.loadLamp()
-	self.canProceed = false
+
 
 	shove.createLayer("ui", {zIndex = 10})
 	self.showInstructions = false
@@ -20,10 +18,14 @@ function TitleScreen:init()
 	self.musicManager = SoundManager(AllSounds.music)
 	self.sfxManager = SoundManager(AllSounds.sfx.player)
 	self.gameName = "Game Name Placeholder"
-	self.uiOptions = {a=0}
+
 end;
 
 function TitleScreen:enter(previous)
+	self.player = self.loadPlayer()
+	self.lamp = self.loadLamp()
+	self.canProceed = false
+	self.uiOptions = {a=0}
 	self.bgOptions = {x=0,y=0,a=0}
 	self.song = self.musicManager.sounds["title_screen"][1]
 	self:start()

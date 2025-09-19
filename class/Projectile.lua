@@ -20,8 +20,9 @@ end;
 
 ---@param other Entity
 function Projectile:onCollision(other)
-	if not other == self.owner then
+	if other ~= self.owner then
 		other:takeDamage(self.damage)
+		print('damage dealt')
 	end
 end;
 
@@ -31,20 +32,22 @@ function Projectile:update(dt)
 
 	local goalX = self.pos.x + self.v.x * dt
 	local goalY = self.pos.y + self.v.y * dt
-	local actualX, actualY, cols, len = World:move(self, goalX, goalY)
-		-- function(item, other)
-		-- 	if other == item.owner then
-		-- 		return nil
-		-- 	end
-		-- end)
+	local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+		function(item, other)
+			if other == self.owner then
+				return nil
+			else
+				return "cross"
+			end
+		end)
 	self.pos.x = actualX
 	self.pos.y = actualY
 
 	for _,col in ipairs(cols) do
-		if col.other.type == "player" and col.other.canTakeDamage then
+		if col.other.canTakeDamage then
 			col.other:takeDamage(self.damage)
+			self.active = false
 		end
-		self.active = false
 	end
 
 	if self.pos.x < -self.dims.w or self.pos.x > love.graphics.getWidth() or

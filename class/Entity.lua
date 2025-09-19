@@ -26,6 +26,20 @@ function Entity:init(data)
   self.speed = data.speed or 100
   self.moveDir = data.moveDir or 0
   self.dead = false
+  self.movedToNextLevel = false
+  self.canTakeDamage = true
+  self.health = data.health or 3
+end;
+
+function Entity:takeDamage(amount)
+  if self.canTakeDamage then
+    amount = amount or 1
+    self.health = self.health - amount
+
+    if self.health < 1 then
+      self.dead = true
+    end
+  end
 end;
 
 ---@param dt number
@@ -67,8 +81,13 @@ function Entity:updatePosition(dt)
           Signal.emit("OnLampCollision", 10, dt)
           return nil
         else
-          return "cross" 
+          return nil 
         end
+      elseif other.type == "levelEnd" and not self.movedToNextLevel then
+        self.movedToNextLevel = true
+        Signal.emit("EndLevel")
+      else
+        return nil
       end
     end)
 

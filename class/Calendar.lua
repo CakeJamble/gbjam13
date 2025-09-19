@@ -77,32 +77,36 @@ end;
 
 ---@param dt number
 function Calendar:update(dt)
-	Entity.update(self, dt)
+	if not self.dead then
+		Entity.update(self, dt)
 
-	local goalX = self.pos.x
-	local goalY = self.baseY + self.offsetY
-	local actualX, actualY, cols, len = World:move(self, goalX, goalY)
-	self.pos.x, self.pos.y = actualX, actualY
+		local goalX = self.pos.x
+		local goalY = self.baseY + self.offsetY
+		local actualX, actualY, cols, len = World:move(self, goalX, goalY)
+		self.pos.x, self.pos.y = actualX, actualY
 
-	for _,col in ipairs(cols) do
-		if col.other.type == "player" and col.other.canTakeDamage then
-			col.other:takeDamage(self.damage)
+		for _,col in ipairs(cols) do
+			if col.other.type == "player" and col.other.canTakeDamage then
+				col.other:takeDamage(self.damage)
+			end
 		end
-	end
 
-	for i,projectile in ipairs(self.projectiles) do
-		projectile:update(dt)
-		if not projectile.active then
-			table.remove(self.projectiles, i)
-			World:remove(projectile)
+		for i,projectile in ipairs(self.projectiles) do
+			projectile:update(dt)
+			if not projectile.active then
+				table.remove(self.projectiles, i)
+				World:remove(projectile)
+			end
 		end
 	end
 end;
 
 function Calendar:draw()
-	Entity.drawSprite(self, self.spriteOffsets)
-	for _,projectile in ipairs(self.projectiles) do
-		projectile:draw()
+	if not self.dead then
+		Entity.drawSprite(self, self.spriteOffsets)
+		for _,projectile in ipairs(self.projectiles) do
+			projectile:draw()
+		end
 	end
 end;
 

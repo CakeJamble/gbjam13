@@ -1,4 +1,3 @@
-local Signal = require('lib.hump.signal')
 local Class = require('lib.hump.class')
 
 local Lamp = Class{sprite = love.graphics.newImage('asset/sprite/object/lamp_on.png')}

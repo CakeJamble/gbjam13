@@ -2,7 +2,8 @@ local Projectile = require('class.Projectile')
 local Class = require('lib.hump.class')
 
 ---@class Gun
-local Gun = Class{}
+---@field sprite love.Image
+local Gun = Class{sprite = love.graphics.newImage('asset/sprite/player/projectile.png')}
 
 function Gun:init(data)
 	self.projectiles = {}
@@ -28,7 +29,7 @@ function Gun:shoot(isUnlucky)
 				y = -self.direction.y * self.projectileSpeed.y
 			},
 			w = 8, h = 8,
-			spritePath = self.projectileType,
+			sprite = Gun.sprite,
 			damage = self.damage
 		}
 		local projectile = Projectile(pData, self.owner)

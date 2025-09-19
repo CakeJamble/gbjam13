@@ -20,7 +20,6 @@ function Game:init()
 	self.levelIndex = 1
 	self.tileSize = 16
 	self.showDebug = false
-	self.player = self:loadPlayer()
 	Gravity = 500
 	self.zoomValue = 4
 	self.numVisible = 0
@@ -47,10 +46,23 @@ function Game:init()
 		local val = amount * dt
 		self.unluckyMeter:tweenLucky(dt, val)
 	end)
+	Signal.register("EndLevel",function()
+		self.levelIndex = self.levelIndex + 1
+		print(self.levelIndex)
+		self.song:stop()
+		Gamestate.switch(States["SplashScreen"], self.levelIndex)
+	end)
+	Signal.register("OnDeath", function()
+		self.song:stop()
+		self.levelIndex = 1
+		Gamestate.switch(States["TitleScreen"])
+	end)
 end;
 
 ---@param previous table Previously active State
-function Game:enter(previous)
+function Game:enter(previous, levelIndex)
+	self.player = self:loadPlayer()
+	self.levelIndex = levelIndex
 	self.parallax = self.initBG()
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player)
 	local tileMap = self.maps[self.levelIndex]
@@ -125,7 +137,7 @@ function Game:loadPlayer()
 		x = x, y = y,
 		w = 25, h = 24,
 		animations = {
-			"idle", "walk", "jump", -- "shoot", ...
+			"idle", "walk", "jump", "fall", "in_light", "look_down", "look_up", "stun"
 		}
 	}
 	local player = Player(playerData)

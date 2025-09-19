@@ -94,43 +94,45 @@ end;
 
 ---@param dt number
 function Mask:update(dt)
-	self.swoopTimer:update(dt)
-	-- follow
-	if self.state == "follow" then
-		self.hoverX = Mask.lerp(self.hoverX, self.player.pos.x + self.hoverOffsetX, 0.02)
-		self.pos.x = self.hoverX
-		self.pos.y = self.hoverY + math.sin(love.timer.getTime() * self.wobbleFreq) * self.wobbleAmplitude
-		-- local dx = self.player.pos.x - self.pos.x
-		-- self.pos.x = self.hoverX + dx * 0.02
+	if not self.dead then
+		self.swoopTimer:update(dt)
+		-- follow
+		if self.state == "follow" then
+			self.hoverX = Mask.lerp(self.hoverX, self.player.pos.x + self.hoverOffsetX, 0.02)
+			self.pos.x = self.hoverX
+			self.pos.y = self.hoverY + math.sin(love.timer.getTime() * self.wobbleFreq) * self.wobbleAmplitude
+			-- local dx = self.player.pos.x - self.pos.x
+			-- self.pos.x = self.hoverX + dx * 0.02
 
-		local goalX = self.hoverX + (self.player.pos.x - self.hoverX) * 0.02
-		local goalY = self.hoverY + math.sin(love.timer.getTime() * self.wobbleFreq) * self.wobbleAmplitude
+			local goalX = self.hoverX + (self.player.pos.x - self.hoverX) * 0.02
+			local goalY = self.hoverY + math.sin(love.timer.getTime() * self.wobbleFreq) * self.wobbleAmplitude
 
-		-- ignore collision
-		local actualX, actualY = World:move(self, goalX, goalY, function() return nil end)
-		self.pos.x, self.pos.y = actualX, actualY
-	elseif self.state == "swoop" then
-		local dx = self.swoopTarget.x - self.pos.x
-		local dy = self.swoopTarget.y - self.pos.y
-		local distance = math.sqrt(dx*dx + dy*dy)
-
-		if distance < 3 then
-			self:returnToHover()
-		else
-			local vx = (dx/distance) * self.swoopSpeed * dt
-			local vy = (dy/distance) * self.swoopSpeed * dt
-
-			local goalX, goalY = self.pos.x + vx, self.pos.y + vy
-			local actualX, actualY, cols, len = World:move(self, goalX, goalY,
-				function(item, other)
-					if other.type == "player" then return "cross"
-					else return nil end
-				end)
+			-- ignore collision
+			local actualX, actualY = World:move(self, goalX, goalY, function() return nil end)
 			self.pos.x, self.pos.y = actualX, actualY
+		elseif self.state == "swoop" then
+			local dx = self.swoopTarget.x - self.pos.x
+			local dy = self.swoopTarget.y - self.pos.y
+			local distance = math.sqrt(dx*dx + dy*dy)
 
-			for _,col in ipairs(cols) do
-				if col.other.type == "player" and col.other.canTakeDamage then
-					col.other:takeDamage(self.damage)
+			if distance < 3 then
+				self:returnToHover()
+			else
+				local vx = (dx/distance) * self.swoopSpeed * dt
+				local vy = (dy/distance) * self.swoopSpeed * dt
+
+				local goalX, goalY = self.pos.x + vx, self.pos.y + vy
+				local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+					function(item, other)
+						if other.type == "player" then return "cross"
+						else return nil end
+					end)
+				self.pos.x, self.pos.y = actualX, actualY
+
+				for _,col in ipairs(cols) do
+					if col.other.type == "player" and col.other.canTakeDamage then
+						col.other:takeDamage(self.damage)
+					end
 				end
 			end
 		end
@@ -145,12 +147,14 @@ function Mask.lerp(a,b,t)
 end;
 
 function Mask:draw()
-	local xOff, yOff = self.spriteOffsets.x, self.spriteOffsets.y
-  local animation = self.animations[self.currentAnimationTag]
-  local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
-  spriteNum = math.min(spriteNum, #animation.quads)
-  local transform = love.math.newTransform(self.pos.x, self.pos.y)
-  love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
+	if not self.dead then
+		local xOff, yOff = self.spriteOffsets.x, self.spriteOffsets.y
+	  local animation = self.animations[self.currentAnimationTag]
+	  local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1
+	  spriteNum = math.min(spriteNum, #animation.quads)
+	  local transform = love.math.newTransform(self.pos.x, self.pos.y)
+	  love.graphics.draw(animation.spriteSheet, animation.quads[spriteNum], transform)
+	end
 end;
 
 return Mask

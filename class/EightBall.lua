@@ -26,30 +26,32 @@ function EightBall:onCollision(other)
 end;
 
 function EightBall:update(dt)
-	Entity.update(self, dt)
+	if not self.dead then
+		Entity.update(self, dt)
 
-	self.v.x = self.moveDir * self.speed
-	self.v.y = self.v.y + Gravity * dt
-	local goalX = self.pos.x + self.v.x * dt
-	local goalY = self.pos.y + self.v.y * dt
-	local actualX, actualY, cols, len = World:move(self, goalX, goalY,
-		function(item, other)
-			if other.type == "ground" or other.type == "enemy" then
-				return "slide"
-			elseif other.type == "player" then
-				return "cross"
+		self.v.x = self.moveDir * self.speed
+		self.v.y = self.v.y + Gravity * dt
+		local goalX = self.pos.x + self.v.x * dt
+		local goalY = self.pos.y + self.v.y * dt
+		local actualX, actualY, cols, len = World:move(self, goalX, goalY,
+			function(item, other)
+				if other.type == "ground" or other.type == "enemy" then
+					return "slide"
+				elseif other.type == "player" then
+					return "cross"
+				end
+			end)
+		self.pos.x, self.pos.y = actualX, actualY
+
+		-- turn around after hitting a wall
+		for _,col in ipairs(cols) do
+			if col.normal.x ~= 0 then
+				self:turnAround()
 			end
-		end)
-	self.pos.x, self.pos.y = actualX, actualY
 
-	-- turn around after hitting a wall
-	for _,col in ipairs(cols) do
-		if col.normal.x ~= 0 then
-			self:turnAround()
-		end
-
-		if col.other.type == "player" and col.other.canTakeDamage then
-			col.other:takeDamage(self.damage)
+			if col.other.type == "player" and col.other.canTakeDamage then
+				col.other:takeDamage(self.damage)
+			end
 		end
 	end
 end;
@@ -74,7 +76,9 @@ function EightBall:turnAround()
 end;
 
 function EightBall:draw()
-	self:drawSprite(self.spriteOffsets, -self.moveDir)
+	if not self.dead then
+		self:drawSprite(self.spriteOffsets, -self.moveDir)
+	end
 end;
 
 return EightBall
