@@ -24,6 +24,7 @@ function Game:init()
 	self.sfxManager = SoundManager(AllSounds.sfx)
 	self.paused = false
 	self.showUnluckyMessage = false
+	self.uiTextColor = {240/255, 225/255, 209/255, 1}
 	self.unluckyMessageBox = Text.new("left", {
 		color = {0.9,0.9,0.9,0.95},
 	})
@@ -93,6 +94,9 @@ function Game:enter(previous, levelIndex)
 	self.levelIndex = levelIndex
 	self.backgroundTile = love.graphics.newImage("asset/sprite/tile/star_bg.png")
 	self.levelBgTile = love.graphics.newImage("asset/sprite/tile/bg_stripes.png")
+	
+	self.hpLabel = love.graphics.newImage("asset/sprite/HP_LABEL.png")
+	self.luckLabel = love.graphics.newImage("asset/sprite/LUCK_LABEL.png")
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
 	local tileMap = self.maps[self.levelIndex]
 
@@ -114,9 +118,10 @@ function Game.initUnluckyMeter(playerPos)
 	local options = {
 		x = x,
 		y = y,
-		w = 10,
-		h = 40,
+		w = 60,
+		h = 12,
 		min=0,max=100,
+		horizontal = true
 	}
 	return ProgressBar(options)
 end;
@@ -263,6 +268,15 @@ function Game:update(dt)
 			for _,enemy in ipairs(self.enemies) do
 				enemy:update(dt)
 			end
+			
+			-- Remove dead enemies from world and enemies table so they actually disappear w/r/t collision
+			for i = #self.enemies, 1, -1 do
+				local enemy = self.enemies[i]
+				if enemy.dead then
+					self.world:remove(enemy)
+					table.remove(self.enemies, i)
+				end
+			end
 
 			self.player:update(dt)
 
@@ -275,7 +289,8 @@ end;
 
 function Game:updateCamera(dt)
 	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
-	local tx,ty = x-80,y-72
+	local vH = shove.getViewportHeight()
+	local tx,ty = x-80, y-(vH/2 - 8) 
 	self.camera.x = self.camera.x + (tx - self.camera.x) * self.camera.speed * dt
 	self.camera.y = self.camera.y + (ty - self.camera.y) * self.camera.speed * dt
 end;
@@ -354,7 +369,25 @@ function Game:drawCollision()
 end;
 
 function Game:drawUI()
-	self.unluckyMeter:draw(self.player.pos.x - 7, self.player.pos.y - 10)
+	love.graphics.push()
+	love.graphics.origin()
+	local screenWidth = shove.getViewportWidth()
+	local screenHeight = shove.getViewportHeight()
+	
+	-- Draw HP (bottom-left)
+	love.graphics.setColor(self.uiTextColor)
+	love.graphics.draw(self.hpLabel, 2, screenHeight - 8)
+	love.graphics.setColor(217/255, 151/255, 65/255, 1)
+	for i = 1, self.player.health do
+		love.graphics.circle("fill", 12 + i * 6, screenHeight - 5, 2)
+	end
+	
+	-- Draw luck meter (bottom-right)
+	love.graphics.setColor(self.uiTextColor)
+	love.graphics.draw(self.luckLabel, screenWidth - 59, screenHeight - 7)
+	self.unluckyMeter:draw(screenWidth - 32, screenHeight - 7)
+	
+	love.graphics.pop()
 end;
 
 return Game
