@@ -30,7 +30,7 @@ function EightBall:update(dt)
 		Entity.update(self, dt)
 
 		self.v.x = self.moveDir * self.speed
-		self.v.y = self.v.y + Gravity * dt
+		self.v.y = self.v.y * dt
 		local goalX = self.pos.x + self.v.x * dt
 		local goalY = self.pos.y + self.v.y * dt
 		local actualX, actualY, cols, len = self.world:move(self, goalX, goalY,

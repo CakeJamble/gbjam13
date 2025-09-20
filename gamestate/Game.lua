@@ -42,7 +42,7 @@ function Game:init()
 	Signal.register("OnLampCollision", function(amount, dt)
 		local val = amount * dt
 		self.unluckyMeter:tweenLucky(dt, val)
-		self.player.currentAnimationTag = "in_light"
+		-- self.player.currentAnimationTag = "in_light"
 	end)
 	Signal.register("EndLevel",function()
 		self.levelIndex = self.levelIndex + 1
