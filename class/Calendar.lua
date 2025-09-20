@@ -23,7 +23,7 @@ function Calendar:init(data)
 	local sprite = createAnimation(Calendar.sprite, 16, 16)
 	sprite.loop = true
 	self.animations.idle = sprite
-	self.solid = true
+	self.solid = false
 	self.damage = data.damage or 1
 	self.amplitude = 25
 	self.baseY = data.y
@@ -32,14 +32,6 @@ function Calendar:init(data)
 	self.spriteOffsets = {x = 16, y = 16}
 
 	self:start()
-
-	-- Signal.register("EndLevel", function()
-	-- 	print('here')
-	-- 	for i,projectile in ipairs(self.projectiles) do
-	-- 		self.world:remove(projectile)
-	-- 		table.remove(self.projectiles, i)
-	-- 	end
-	-- end)
 end;
 
 function Calendar:start()
@@ -98,7 +90,10 @@ function Calendar:update(dt)
 
 		for _,col in ipairs(cols) do
 			if col.other.type == "player" and col.other.canTakeDamage then
-				col.other:takeDamage(self.damage)
+				if not self.dead then
+					print('taking damage')
+					col.other:takeDamage(self.damage)
+				end
 			end
 		end
 

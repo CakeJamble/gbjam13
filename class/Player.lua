@@ -249,7 +249,7 @@ function Player:handleCollision(collisionInfo)
 			self.jumpCount = 0
 			self.onGround = true
 		end
-		if col.other.onCollision then
+		if col.other.onCollision and col.other.dead == false then
 			col.other:onCollision(self)
 		end
 	end

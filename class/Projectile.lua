@@ -15,7 +15,7 @@ function Projectile:init(data, owner)
 	end
 	self.active = true
 	self.damage = data.damage or 1
-	self.solid = true
+	self.solid = false
 	self.owner = owner
 end;
 
