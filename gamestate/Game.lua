@@ -249,6 +249,13 @@ function Game:keypressed(key)
 		self.paused = not self.paused
 
 		if self.paused then
+			self.unluckyMeter:stop()
+		else
+			local dur = self.unluckyMeter.remaining
+			self.unluckyMeter:tweenUnlucky(dur)
+		end
+
+		if self.paused then
 			self.soundManager:pause()
 			self.player.sfx:pause()
 		else

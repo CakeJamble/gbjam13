@@ -36,6 +36,7 @@ function ProgressBar:init(options)
 end;
 
 ---@param duration number
+---@param value? number
 function ProgressBar:tweenUnlucky(duration, value)
 	if self.tween then self.tween:stop() end
 
@@ -59,6 +60,12 @@ end;
 
 function ProgressBar:stop()
 	self.tween:stop()
+	local curr = self.meterOptions.height
+	local target = math.min(0, curr)
+	local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
+	local maxDistance = self.containerOptions.height
+	local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+	self.remaining = newDuration 
 end;
 
 ---@param amount integer
