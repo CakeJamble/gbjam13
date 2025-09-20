@@ -92,6 +92,7 @@ function Game:enter(previous, levelIndex)
 	self.player = self:loadPlayer()
 	self.levelIndex = levelIndex
 	self.backgroundTile = love.graphics.newImage("asset/sprite/tile/star_bg.png")
+	self.levelBgTile = love.graphics.newImage("asset/sprite/tile/bg_stripes.png")
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
 	local tileMap = self.maps[self.levelIndex]
 
@@ -307,19 +308,33 @@ end;
 
 function Game:drawBackground()
 	shove.beginLayer("background")
-	local tileSize = 32
-	local startX = math.floor(self.camera.x / tileSize) * tileSize
-	local startY = math.floor(self.camera.y / tileSize) * tileSize
+	local starTileSize = 32
+	local stripeTileSize = 16
+	local startX = math.floor(self.camera.x / stripeTileSize) * stripeTileSize
+	local startY = math.floor(self.camera.y / stripeTileSize) * stripeTileSize
 	local vW = shove.getViewportWidth()
-	local vH = shove.getViewportHeight()	
-	for x = startX - tileSize, startX + vW + tileSize, tileSize do
-		for y = startY - tileSize, startY + vH + tileSize, tileSize do
-			-- Only draw background tiles outside the level bounds
+	local vH = shove.getViewportHeight()
+	
+	-- level bg
+	-- for x = startX - stripeTileSize, startX + vW + stripeTileSize, stripeTileSize do
+	-- 	for y = startY - stripeTileSize, startY + vH + stripeTileSize, stripeTileSize do
+	-- 		if x >= 0 and x < self.levelWidth and y >= 0 and y < self.levelHeight then
+	-- 			love.graphics.draw(self.levelBgTile, x, y)
+	-- 		end
+	-- 	end
+	-- end
+	
+	--OOB background
+	local starStartX = math.floor(self.camera.x / starTileSize) * starTileSize
+	local starStartY = math.floor(self.camera.y / starTileSize) * starTileSize
+	for x = starStartX - starTileSize, starStartX + vW + starTileSize, starTileSize do
+		for y = starStartY - starTileSize, starStartY + vH + starTileSize, starTileSize do
 			if x < 0 or x >= self.levelWidth or y < 0 or y >= self.levelHeight then
 				love.graphics.draw(self.backgroundTile, x, y)
 			end
 		end
 	end
+	
 	shove.endLayer()
 end;
 
