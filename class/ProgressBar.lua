@@ -10,6 +10,7 @@ function ProgressBar:init(options)
 	options.w = options.w/2
 	options.h = options.h/2
 	self.isUnlucky = false
+	self.horizontal = options.horizontal or false -- Support for horizontal orientation
 	self.pos = {
 		x = options.x,
 		y = options.y
@@ -23,13 +24,23 @@ function ProgressBar:init(options)
 		height = options.h
 	}
 
-	self.meterStartingHeight = 0
-	self.meterOptions = {
-		mode = 'fill',
-		width = options.w,
-		height = self.meterStartingHeight,
-		value = 0
-	}
+	if self.horizontal then
+		self.meterStartingWidth = 0
+		self.meterOptions = {
+			mode = 'fill',
+			width = self.meterStartingWidth,
+			height = options.h,
+			value = 0
+		}
+	else
+		self.meterStartingHeight = 0
+		self.meterOptions = {
+			mode = 'fill',
+			width = options.w,
+			height = self.meterStartingHeight,
+			value = 0
+		}
+	end
 	self.tween = nil
 	self.duration = 15
 	self:tweenUnlucky(self.duration)
@@ -40,32 +51,58 @@ end;
 function ProgressBar:tweenUnlucky(duration, value)
 	if self.tween then self.tween:stop() end
 
-	self.tween = flux.to(self.meterOptions, duration, {height = -self.containerOptions.height})
-		:oncomplete(function() Signal.emit('OnUnlucky') end)
+	if self.horizontal then
+		self.tween = flux.to(self.meterOptions, duration, {width = self.containerOptions.width})
+	else
+		self.tween = flux.to(self.meterOptions, duration, {height = -self.containerOptions.height})
+	end
 end;
 
 function ProgressBar:tweenLucky(duration, value)
 	Signal.emit("OnUnluckyEnd")
-	local curr = self.meterOptions.height
-	local target = math.min(0, curr + value)
+	
+	if self.horizontal then
+		local curr = self.meterOptions.width
+		local target = math.max(0, curr - value)
 
-	flux.to(self.meterOptions, duration, {height = target})
-	:oncomplete(function()
-		local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
-		local maxDistance = self.containerOptions.height
-		local newDuration = (remainingMeterDistance / maxDistance) * self.duration
-		self:tweenUnlucky(newDuration)
-	end)
+		flux.to(self.meterOptions, duration, {width = target})
+		:oncomplete(function()
+			local remainingMeterDistance = self.containerOptions.width - target
+			local maxDistance = self.containerOptions.width
+			local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+			self:tweenUnlucky(newDuration)
+		end)
+	else
+		local curr = self.meterOptions.height
+		local target = math.min(0, curr + value)
+
+		flux.to(self.meterOptions, duration, {height = target})
+		:oncomplete(function()
+			local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
+			local maxDistance = self.containerOptions.height
+			local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+			self:tweenUnlucky(newDuration)
+		end)
+	end
 end;
 
 function ProgressBar:stop()
 	self.tween:stop()
-	local curr = self.meterOptions.height
-	local target = math.min(0, curr)
-	local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
-	local maxDistance = self.containerOptions.height
-	local newDuration = (remainingMeterDistance / maxDistance) * self.duration
-	self.remaining = newDuration 
+	
+	if self.horizontal then
+		local curr = self.meterOptions.width
+		local remainingMeterDistance = self.containerOptions.width - curr
+		local maxDistance = self.containerOptions.width
+		local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+		self.remaining = newDuration
+	else
+		local curr = self.meterOptions.height
+		local target = math.min(0, curr)
+		local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
+		local maxDistance = self.containerOptions.height
+		local newDuration = (remainingMeterDistance / maxDistance) * self.duration
+		self.remaining = newDuration 
+	end
 end;
 
 ---@param amount integer
@@ -82,13 +119,37 @@ end;
 
 function ProgressBar:reset()
 	if self.tween then self.tween:stop(); self.tween = nil; end
-	self.meterOptions.width = self.meterStartingHeight
+	if self.horizontal then
+		self.meterOptions.width = self.meterStartingWidth
+	else
+		self.meterOptions.height = self.meterStartingHeight
+	end
 	self.meterOptions.value = 0
 end;
 
 function ProgressBar:update(dt)
-	if self.isUnlucky and self.meterOptions.height > -self.containerOptions.height then
-		self.isUnlucky = false
+	if self.horizontal then
+		local threshold = self.containerOptions.width * 0.95
+		if self.meterOptions.width >= threshold and not self.isUnlucky then
+			self.isUnlucky = true
+			Signal.emit('OnUnlucky')
+			if self.tween then self.tween:stop() end
+		end
+		if self.isUnlucky and self.meterOptions.width < threshold then
+			self.isUnlucky = false
+		end
+	else
+		-- For vertical meters, check height
+		local threshold = -self.containerOptions.height * 0.95
+		if self.meterOptions.height <= threshold and not self.isUnlucky then
+			self.debugMessage = "UNLUCKY TRIGGERED (V): " .. self.meterOptions.height .. "/" .. -self.containerOptions.height .. " (threshold: " .. threshold .. ")"
+			self.isUnlucky = true
+			Signal.emit('OnUnlucky')
+			if self.tween then self.tween:stop() end
+		end
+		if self.isUnlucky and self.meterOptions.height > threshold then
+			self.isUnlucky = false
+		end
 	end
 end;
 
@@ -99,7 +160,13 @@ function ProgressBar:draw(x, y)
 	love.graphics.setColor(240/255, 225/255, 209/255)
 	love.graphics.rectangle(self.containerOptions.mode, x, y, cw, ch)
 	love.graphics.setColor(217/255, 151/255, 65/255)
-	love.graphics.rectangle(self.meterOptions.mode, x, y + ch, mw, mh)
+	
+	if self.horizontal then
+		love.graphics.rectangle(self.meterOptions.mode, x, y, mw, ch)
+	else
+		love.graphics.rectangle(self.meterOptions.mode, x, y + ch, mw, mh)
+	end
+	
 	love.graphics.setColor(1, 1, 1)
 end;
 

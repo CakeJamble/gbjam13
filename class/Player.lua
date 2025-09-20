@@ -27,7 +27,7 @@ function Player:init(data)
     self.jumpForce = -200
     self.moveDir = 0
     self.facing = 1
-    self.health = 3
+    self.health = 5
     self.maxJumps = 2
     self.jumpCount = 0
     self.jumping = false
@@ -60,7 +60,12 @@ function Player:init(data)
             self.isUnlucky = true
             self.gun.isUnlucky = true
         end)
-    Signal.register("OnUnluckyEnd", function() self.isUnlucky = false end)
+    Signal.register("OnUnluckyEnd", function() 
+        self.isUnlucky = false
+        if self.gun then
+            self.gun.isUnlucky = false
+        end
+    end)
 end;
 
 ---@param gun Gun
@@ -331,9 +336,6 @@ function Player:draw()
         if self.gun then
             self.gun:draw()
         end
-    end
-    if self.showHealth then
-        self:drawHealth()
     end
 end;
 
