@@ -29,7 +29,7 @@ function Entity:init(data)
   self.dead = false
   self.movedToNextLevel = false
   self.canTakeDamage = true
-  self.health = data.health or 3
+  self.health = data.health or 5
 end;
 
 function Entity:takeDamage(amount)
