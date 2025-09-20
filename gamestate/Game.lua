@@ -96,8 +96,8 @@ function Game:enter(previous, levelIndex)
 	local tileMap = self.maps[self.levelIndex]
 
 	self.level = self:loadLevel(tileMap, self.tileSize)
-	self.levelWidth = self.tileSize * #self.level[1]
-	self.levelHeight = self.tileSize * #self.level
+	self.levelWidth = self.tileSize * #tileMap[1]
+	self.levelHeight = self.tileSize * #tileMap
 	self:addToWorld()
 	local songName = "level_" .. self.levelIndex
 	self.song = self.soundManager.sounds[songName][1]
@@ -314,7 +314,10 @@ function Game:drawBackground()
 	local vH = shove.getViewportHeight()	
 	for x = startX - tileSize, startX + vW + tileSize, tileSize do
 		for y = startY - tileSize, startY + vH + tileSize, tileSize do
-			love.graphics.draw(self.backgroundTile, x, y)
+			-- Only draw background tiles outside the level bounds
+			if x < 0 or x >= self.levelWidth or y < 0 or y >= self.levelHeight then
+				love.graphics.draw(self.backgroundTile, x, y)
+			end
 		end
 	end
 	shove.endLayer()
