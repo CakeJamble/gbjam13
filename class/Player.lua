@@ -32,6 +32,16 @@ function Player:init(data)
     self.jumpCount = 0
     self.jumping = false
     self.jumpButtonHeld = false
+    
+    self.inputState = {
+        left = false,
+        right = false,
+        up = false,
+        down = false,
+        jump = false,
+        shoot = false
+    }
+    
     self.lookYOffset = {base = 0, curr = 0, max = 32, duration = 0.5}
     self.lookTween = nil
     self.sfx = SoundManager(AllSounds.sfx.player)
@@ -130,27 +140,15 @@ end;
 function Player:gamepadpressed(joystick, button)
     if self.dead == false then
         if button == 'dpleft' then
-            self.moveDir = -1
-            self.facing = -1
-            self:tweenCamera("base")
-            self.currentAnimationTag = "walk"
+            self.inputState.left = true
         elseif button == 'dpright' then
-            self.moveDir = 1
-            self.facing = 1
-            self:tweenCamera("base")
-            self.currentAnimationTag = "walk"
+            self.inputState.right = true
         elseif button == 'dpup' then
-            if self.moveDir == 0 then
-                self.currentAnimationTag = "look_up"
-                self:tweenCamera("max", -1)
-            end
+            self.inputState.up = true
         elseif button == 'dpdown' then
-            if self.moveDir == 0 then
-                self.currentAnimationTag = "look_down"
-                self:tweenCamera("max", 1)
-            end
+            self.inputState.down = true
         elseif button == 'a' then
-            self:jump()
+            self.inputState.jump = true
         end
 
         self.gun:gamepadpressed(joystick, button)
@@ -161,27 +159,17 @@ end;
 function Player:keypressed(key)
     if not self.dead then
         if key == "left" then
-            self.moveDir = -1
-            self.facing = -1
-            self:tweenCamera("base")
-            self.currentAnimationTag = "walk"
+            self.inputState.left = true
         elseif key == "right" then
-            self.moveDir = 1
-            self.facing = 1
-            self:tweenCamera("base")
-            self.currentAnimationTag = "walk"
+            self.inputState.right = true
         elseif key == "up" then
-            if self.moveDir == 0 then
-                self.currentAnimationTag = "look_up"
-                self:tweenCamera("max", -1)
-            end
+            self.inputState.up = true
         elseif key == "down" then
-            if self.moveDir == 0 then
-                self.currentAnimationTag = "look_down"
-                self:tweenCamera("max", 1)
-            end
+            self.inputState.down = true
         elseif key == "z" then
-            self:jump()
+            self.inputState.jump = true
+        elseif key == "x" then
+            self.inputState.shoot = true
         end
 
         self.gun:keypressed(key)
@@ -192,13 +180,16 @@ end;
 ---@param button string
 function Player:gamepadreleased(joystick, button)
     if not self.dead then
-        if button == 'dpleft' or button == 'dpright' then
-            self.moveDir = 0
-            self.currentAnimationTag = "idle"
-        elseif button == 'dpup' or button == 'dpdown' then
-            self.currentAnimationTag = "idle"
-            self:tweenCamera("base")
+        if button == 'dpleft' then
+            self.inputState.left = false
+        elseif button == 'dpright' then
+            self.inputState.right = false
+        elseif button == 'dpup' then
+            self.inputState.up = false
+        elseif button == 'dpdown' then
+            self.inputState.down = false
         elseif button == 'a' then
+            self.inputState.jump = false
             self.jumpButtonHeld = false
         end
 
@@ -209,14 +200,19 @@ end;
 ---@param key string
 function Player:keyreleased(key)
     if not self.dead then
-        if key == "left" or key == "right" then
-            self.moveDir = 0
-            self.currentAnimationTag = "idle"
-        elseif key == "up" or key == "down" then
-            self:tweenCamera("base")
-            self.currentAnimationTag = "idle"
+        if key == "left" then
+            self.inputState.left = false
+        elseif key == "right" then
+            self.inputState.right = false
+        elseif key == "up" then
+            self.inputState.up = false
+        elseif key == "down" then
+            self.inputState.down = false
         elseif key == "z" then
+            self.inputState.jump = false
             self.jumpButtonHeld = false
+        elseif key == "x" then
+            self.inputState.shoot = false
         end
 
         self.gun:keyreleased(key)
@@ -234,11 +230,61 @@ function Player:jump()
     end
 end;
 
+function Player:processKeyboardInput()
+    if not self.dead then
+        local newMoveDir = 0
+        if self.inputState.right then
+            newMoveDir = 1
+            self.facing = 1
+        elseif self.inputState.left then
+            newMoveDir = -1
+            self.facing = -1
+        end
+        
+        if newMoveDir ~= self.moveDir then
+            self.moveDir = newMoveDir
+            if self.moveDir == 0 then
+                self.currentAnimationTag = "idle"
+            else
+                self.currentAnimationTag = "walk"
+                self:tweenCamera("base")
+            end
+        end
+        
+        if self.moveDir == 0 then
+            if self.inputState.up and not self.inputState.down then
+                if self.currentAnimationTag ~= "look_up" then
+                    self.currentAnimationTag = "look_up"
+                    self:tweenCamera("max", -1)
+                end
+            elseif self.inputState.down and not self.inputState.up then
+                if self.currentAnimationTag ~= "look_down" then
+                    self.currentAnimationTag = "look_down"
+                    self:tweenCamera("max", 1)
+                end
+            elseif not self.inputState.up and not self.inputState.down then
+                if self.currentAnimationTag == "look_up" or self.currentAnimationTag == "look_down" then
+                    self.currentAnimationTag = "idle"
+                    self:tweenCamera("base")
+                end
+            end
+        end
+        
+        if self.inputState.jump and not self.jumpButtonHeld then
+            self:jump()
+        end
+        
+        self.jumpButtonHeld = self.inputState.jump
+    end
+end;
+
 ---@param dt number
 function Player:update(dt)
     Entity.update(self, dt)
     self.sfx:update(dt)
     if not self.dead then
+        self:processKeyboardInput()
+        
         -- Handle variable jump height
         if self.jumping and not self.jumpButtonHeld and self.v.y < 0 then
             self.v.y = self.v.y * 0.5  -- Cut jump velocity when button released
