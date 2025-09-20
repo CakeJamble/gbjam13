@@ -30,6 +30,7 @@ function Calendar:init(data)
 	self.offsetY = 0
 	self:tweenUp()
 	self.spriteOffsets = {x = 16, y = 16}
+	self.facing = data.facing or "left"
 
 	self:start()
 end;
@@ -45,12 +46,16 @@ end;
 
 ---@param projectileSprite love.Image
 function Calendar:shoot(projectileSprite)
+	local shootDirection = self.facing == "right" and 1 or -1
+	local xOffset = self.facing == "right" and self.dims.w or -self.dims.w
+	local speed = self.facing == "right" and 200 or -200
+	
 	local data = {
-		x = self.pos.x - self.dims.w,
+		x = self.pos.x + xOffset,
 		y = self.pos.y + self.dims.h/2,
 		w = 16,
 		h = 8,
-		speed = {x = -200, y = 0},
+		speed = {x = speed, y = 0},
 		damage = 1,
 		sprite = projectileSprite,
 		world = self.world

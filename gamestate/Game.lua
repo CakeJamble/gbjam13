@@ -156,7 +156,7 @@ end;
 
 ---@return Player
 function Game:loadPlayer()
-	local col, row = 2, 6
+	local col, row = 2, 76
 	local x = (col - 1) * self.tileSize
 	local y = (row - 1) * self.tileSize
 
