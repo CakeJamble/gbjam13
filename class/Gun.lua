@@ -29,9 +29,9 @@ function Gun:shoot(isUnlucky)
 	else
 		local yOffset = 0
 		if self.direction.y > 0 then -- shooting up
-			yOffset = -6
+			yOffset = -8
 		elseif self.direction.y < 0 then -- shooting down
-			yOffset = 6
+			yOffset = 8
 		end
 		
 		local pData = {
