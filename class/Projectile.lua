@@ -45,7 +45,7 @@ function Projectile:update(dt)
 	self.pos.y = actualY
 
 	for _,col in ipairs(cols) do
-		if col.other.canTakeDamage then
+		if col.other.canTakeDamage and not col.other.dead then
 			col.other:takeDamage(self.damage)
 			self.active = false
 		end
