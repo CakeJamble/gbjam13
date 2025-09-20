@@ -41,6 +41,10 @@ function EightBall:update(dt)
 	if not self.dead then
 		Entity.update(self, dt)
 
+		if self.dying then
+			return
+		end
+
 		self.v.x = self.moveDir * self.speed
 		self.v.y = self.v.y * dt
 		local goalX = self.pos.x + self.v.x * dt
@@ -55,14 +59,30 @@ function EightBall:update(dt)
 			end)
 		self.pos.x, self.pos.y = actualX, actualY
 
-		-- turn around after hitting a wall
 		for _,col in ipairs(cols) do
 			if col.normal.x ~= 0 then
-				self:turnAround()
+				if col.other.type ~= "player" then
+					-- Always turn around when hitting walls/ground
+					self:turnAround()
+				elseif col.other.type == "player" and col.other.canTakeDamage and not col.other.dead then
+					-- Only turn around if player is in front of ball's movement direction
+					local playerInFront = false
+					if self.moveDir > 0 then
+						playerInFront = col.other.pos.x > self.pos.x
+					else
+						playerInFront = col.other.pos.x < self.pos.x
+					end
+					
+					if playerInFront then
+						self:turnAround()
+					end
+				end
 			end
 
-			if col.other.type == "player" and col.other.canTakeDamage then
-				col.other:takeDamage(self.damage)
+			if col.other.type == "player" and col.other.canTakeDamage and not col.other.dead then
+				if not self.dying and not self.dead then
+					col.other:takeDamage(self.damage)
+				end
 			end
 		end
 	end

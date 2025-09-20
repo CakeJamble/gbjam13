@@ -34,8 +34,15 @@ function Gun:shoot(isUnlucky)
 			yOffset = 8
 		end
 		
+		local xOffset = 0
+		if self.direction.x > 0 then
+			xOffset = (self.dims.w / 2) + 2 -- shooting right
+		elseif self.direction.x < 0 then -- shooting left
+			xOffset = 0
+		end
+		
 		local pData = {
-			x = self.direction.x * self.dims.w + self.pos.x,
+			x = self.pos.x + xOffset,
 			y = self.pos.y + self.dims.h / 2 + yOffset,
 			speed = {
 				x = self.direction.x * self.projectileSpeed.x,

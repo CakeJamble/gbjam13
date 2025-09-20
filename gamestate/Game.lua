@@ -269,11 +269,18 @@ function Game:update(dt)
 				enemy:update(dt)
 			end
 			
-			-- Remove dead enemies from world and enemies table so they actually disappear w/r/t collision
 			for i = #self.enemies, 1, -1 do
 				local enemy = self.enemies[i]
+				
+				-- Remove from collision world immediately when dying starts
+				if enemy.removeFromWorld then
+					-- Use pcall to safely attempt removal
+					pcall(function() self.world:remove(enemy) end)
+					enemy.removeFromWorld = false -- Mark as processed
+				end
+				
+				-- Fully remove dead enemies from game
 				if enemy.dead then
-					self.world:remove(enemy)
 					table.remove(self.enemies, i)
 				end
 			end
@@ -362,8 +369,10 @@ end;
 function Game:drawCollision()
 	love.graphics.setColor(1, 0, 0, 0.5)
 	for _,item in ipairs(self.world:getItems()) do
-		local x, y, w, h = self.world:getRect(item)
-		love.graphics.rectangle("line", x, y, w, h)
+		local success, x, y, w, h = pcall(self.world.getRect, self.world, item)
+		if success then
+			love.graphics.rectangle("line", x, y, w, h)
+		end
 	end
 	love.graphics.setColor(1,1,1,1)
 end;

@@ -27,6 +27,12 @@ function Entity:init(data)
   self.speed = data.speed or 100
   self.moveDir = data.moveDir or 0
   self.dead = false
+  self.dying = false
+  self.removeFromWorld = false
+  self.deathBlinkTime = 0
+  self.deathBlinkDuration = 1.0
+  self.deathBlinkInterval = 0.1
+  self.deathVisible = true
   self.movedToNextLevel = false
   self.canTakeDamage = true
   self.health = data.health or 5
@@ -37,15 +43,28 @@ function Entity:takeDamage(amount)
     amount = amount or 1
     self.health = self.health - amount
 
-    if self.health < 1 then
-      self.dead = true
+    if self.health < 1 and not self.dying then
+      self.dying = true
+      self.canTakeDamage = false
+      self.deathBlinkTime = 0
     end
   end
 end;
 
 ---@param dt number
 function Entity:update(dt)
-  if not self.dead then
+  if self.dying then
+    self.deathBlinkTime = self.deathBlinkTime + dt
+    
+    local blinkPhase = math.floor(self.deathBlinkTime / self.deathBlinkInterval)
+    self.deathVisible = (blinkPhase % 2 == 0)
+    
+    if self.deathBlinkTime >= self.deathBlinkDuration then
+      self.dead = true
+      self.dying = false
+      self.removeFromWorld = true
+    end
+  elseif not self.dead then
     self:updateAnimation(dt)
   end
 end;
@@ -85,21 +104,19 @@ function Entity:updatePosition(dt)
           return nil 
         end
       elseif other.type == "levelEnd" and not self.movedToNextLevel then
-        self.movedToNextLevel = true
-        Signal.emit("EndLevel")
-      else
-        return nil
-      end
-    end)
+      self.movedToNextLevel = true
+      Signal.emit("EndLevel")
+    else
+      return nil
+    end
+      end)
 
   self.isBlocked = self:checkBlocked()
   self.pos.x, self.pos.y = actualX, actualY
   self.wasOnGround = self.onGround
   self.onGround = false
   return {cols = cols, len = len}
-end;
-
-function Entity:checkBlocked(actualX, goalX, moveDir)
+end;function Entity:checkBlocked(actualX, goalX, moveDir)
   return (actualX ~= goalX) and self.moveDir ~= 0
 end;
 
@@ -108,7 +125,7 @@ function Entity:draw()
 end;
 
 function Entity:drawSprite(spriteOffsets, facing)
-  if not self.dead then
+  if not self.dead and (not self.dying or self.deathVisible) then
     local xOff, yOff = spriteOffsets.x, spriteOffsets.y
     local animation = self.animations[self.currentAnimationTag]
     local spriteNum = math.floor(animation.currentTime / animation.duration * #animation.quads) + 1

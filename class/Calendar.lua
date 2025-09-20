@@ -58,6 +58,10 @@ end;
 
 ---@param projectileSprite love.Image
 function Calendar:shoot(projectileSprite)
+	if self.dying or self.dead then
+		return
+	end
+	
 	local shootDirection = self.facing == "right" and 1 or -1
 	local xOffset = self.facing == "right" and self.dims.w or -self.dims.w
 	local speed = self.facing == "right" and 200 or -200
@@ -95,6 +99,9 @@ end;
 function Calendar:update(dt)
 	if not self.dead then
 		Entity.update(self, dt)
+		if self.dying then
+			return
+		end
 
 		local goalX = self.pos.x
 		local goalY = self.baseY + self.offsetY
@@ -108,8 +115,7 @@ function Calendar:update(dt)
 
 		for _,col in ipairs(cols) do
 			if col.other.type == "player" and col.other.canTakeDamage then
-				if not self.dead then
-					print('taking damage')
+				if not self.dying and not self.dead then
 					col.other:takeDamage(self.damage)
 				end
 			end

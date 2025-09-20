@@ -94,7 +94,7 @@ end;
 function Player:stumbleAndBlink()
     self.showHealth = true
     self.sfx:play("stun")
-    local knockback = -self.moveDir * 25
+    local knockback = -self.moveDir * 35
     local px = self.pos.x
     flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
     self.blinkTween = flux.to(self, self.invulnTime, {blink = 1})
