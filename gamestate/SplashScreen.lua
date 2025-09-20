@@ -40,7 +40,9 @@ end;
 ---@param joystick string
 ---@param button string
 function SplashScreen:gamepadpressed(joystick, button)
-	if self.nextLevel > self.numLevels then
+	if (button == "a" or button == "b" or
+	button == "dpup" or button == "dpdown" or button == "dpleft" or button == "dpright"
+	or button == "start" or button == "select") and self.nextLevel > self.numLevels then
 		love.event.quit()
 	end
 	if button == 'a' then
@@ -49,6 +51,11 @@ function SplashScreen:gamepadpressed(joystick, button)
 end;
 
 function SplashScreen:keypressed(key)
+	if (key == "z" or key == "x" or
+	key == "up" or key == "down" or key == "left" or key == "right"
+	or key == "return" or key == "tab") and self.nextLevel > self.numLevels then
+		love.event.quit()
+	end
 	if key == 'z' then
 		Gamestate.switch(States["Game"], self.nextLevel)
 	end
