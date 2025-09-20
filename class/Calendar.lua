@@ -28,9 +28,21 @@ function Calendar:init(data)
 	self.amplitude = 25
 	self.baseY = data.y
 	self.offsetY = 0
+	self.baseDuration = 2
+	self.currentDuration = self.baseDuration
+	self.isUnlucky = false
 	self:tweenUp()
 	self.spriteOffsets = {x = 16, y = 16}
 	self.facing = data.facing or "left"
+	
+	Signal.register('OnUnlucky', function() 
+		self.isUnlucky = true
+		self.currentDuration = self.baseDuration / 2
+	end)
+	Signal.register('OnUnluckyEnd', function() 
+		self.isUnlucky = false
+		self.currentDuration = self.baseDuration
+	end)
 
 	self:start()
 end;
@@ -66,16 +78,17 @@ function Calendar:shoot(projectileSprite)
 end;
 
 function Calendar:tweenUp(dur)
-	local duration = dur or 2
+	local duration = dur or self.currentDuration
 	flux.to(self, duration, {offsetY = -self.amplitude})
 		:ease("sineinout")
 		:oncomplete(function() self:tweenDown(duration) end)
 end;
 
 function Calendar:tweenDown(duration)
-	flux.to(self, duration, {offsetY = self.amplitude})
+	local actualDuration = duration or self.currentDuration
+	flux.to(self, actualDuration, {offsetY = self.amplitude})
 		:ease("sineinout")
-		:oncomplete(function() self:tweenUp(duration) end)
+		:oncomplete(function() self:tweenUp() end)
 end;
 
 ---@param dt number

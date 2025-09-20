@@ -1,4 +1,5 @@
 local createAnimation = require('util.create_animation')
+local Signal = require('lib.hump.signal')
 local Entity = require('class.Entity')
 local Class = require('lib.hump.class')
 
@@ -14,11 +15,22 @@ function EightBall:init(data)
 	local sprite = createAnimation(EightBall.sprite, 16, 16)
 	sprite.loop = true
 	self.animations.idle = sprite
-	self.speed = data.speed or 50
+	self.baseSpeed = data.speed or 50
+	self.speed = self.baseSpeed
 	self.moveDir = -1
 	self.v.x = self.speed * self.moveDir
 	self.spriteOffsets = {x = 16, y = 16}
 	self.damage = 1
+	self.isUnlucky = false
+	
+	Signal.register('OnUnlucky', function() 
+		self.isUnlucky = true
+		self.speed = self.baseSpeed * 2
+	end)
+	Signal.register('OnUnluckyEnd', function() 
+		self.isUnlucky = false
+		self.speed = self.baseSpeed
+	end)
 end;
 
 function EightBall:onCollision(other)
