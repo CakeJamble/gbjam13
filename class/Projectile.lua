@@ -4,6 +4,7 @@ local Class = require('lib.hump.class')
 local Projectile = Class{}
 
 ---@param data table
+---@param owner Player|Calendar
 function Projectile:init(data, owner)
 	self.world = data.world
 	self.pos = {x = data.x, y = data.y}
@@ -21,7 +22,7 @@ end;
 
 ---@param other Entity
 function Projectile:onCollision(other)
-	if other ~= self.owner then
+	if other ~= self.owner and other.type ~= self.owner.type then
 		other:takeDamage(self.damage)
 		print('damage dealt')
 	end
@@ -45,7 +46,7 @@ function Projectile:update(dt)
 	self.pos.y = actualY
 
 	for _,col in ipairs(cols) do
-		if col.other.canTakeDamage and not col.other.dead then
+		if col.other.canTakeDamage and not col.other.dead and col.other.type ~= self.owner.type then
 			col.other:takeDamage(self.damage)
 			self.active = false
 		end

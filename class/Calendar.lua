@@ -55,7 +55,7 @@ function Calendar:shoot(projectileSprite)
 		sprite = projectileSprite,
 		world = self.world
 	}
-	local projectile = Projectile(data)
+	local projectile = Projectile(data, self)
 	self.world:add(projectile, projectile.pos.x, projectile.pos.y, projectile.dims.w, projectile.dims.h)
 	table.insert(self.projectiles, projectile)
 end;
