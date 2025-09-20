@@ -38,6 +38,8 @@ function Projectile:update(dt)
 		function(item, other)
 			if other == self.owner then
 				return nil
+			elseif self.owner.type == "player" and other.type == "ground" then
+				return "slide"
 			else
 				return "cross"
 			end
@@ -46,7 +48,9 @@ function Projectile:update(dt)
 	self.pos.y = actualY
 
 	for _,col in ipairs(cols) do
-		if col.other.canTakeDamage and not col.other.dead and col.other.type ~= self.owner.type then
+		if self.owner.type == "player" and col.other.type == "ground" then
+			self.active = false
+		elseif col.other.canTakeDamage and not col.other.dead and col.other.type ~= self.owner.type then
 			col.other:takeDamage(self.damage)
 			self.active = false
 		end
