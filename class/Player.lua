@@ -35,7 +35,7 @@ function Player:init(data)
 	self.sfx = SoundManager(AllSounds.sfx.player)
 	--self.unluckyMeter = ProgressBar()
 	self.canTakeDamage = true
-	self.invulnTime = 2
+	self.invulnTime = 1
 	self.invulnTimer = 0
 	self.stumbleTime = 0.5
 	self.vis = true
@@ -77,13 +77,13 @@ end;
 function Player:stumbleAndBlink()
 	self.showHealth = true
 	self.sfx:play("stun")
-	local knockback = -self.moveDir * 16
+	local knockback = -self.moveDir * 25
 	local px = self.pos.x
 	flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
 	self.blinkTween = flux.to(self, self.invulnTime, {blink = 1})
 		:onupdate(
 			function()
-				self.vis = math.floor(self.blink * 5) % 2 == 0
+				self.vis = math.floor(self.blink * 4) % 2 == 0
 			end)
 		:oncomplete(
 			function()
