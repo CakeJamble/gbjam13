@@ -27,9 +27,17 @@ function Gun:shoot(isUnlucky)
 	if self.isUnlucky then
 		self.sfx:play("misfire")
 	else
+		-- Adjust Y position based on shooting direction
+		local yOffset = 0
+		if self.direction.y > 0 then -- shooting up
+			yOffset = -6
+		elseif self.direction.y < 0 then -- shooting down
+			yOffset = 6
+		end
+		
 		local pData = {
 			x = self.direction.x * self.dims.w + self.pos.x,
-			y = self.pos.y + self.dims.h / 2,
+			y = self.pos.y + self.dims.h / 2 + yOffset,
 			speed = {
 				x = self.direction.x * self.projectileSpeed.x,
 				y = -self.direction.y * self.projectileSpeed.y
