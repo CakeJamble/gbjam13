@@ -13,9 +13,10 @@ local Game = {}
 
 function Game:init()
 	self.tileSize = 8
-	self.drawHitboxes = true
+	self.drawHitboxes = false
 	shove.createLayer("level", {zIndex = 100})
 	shove.createLayer("ui", {zIndex = 1000})
+	shove.createLayer("background", {zIndex = 5})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
 	self.maps = loadMaps()
 	Gravity = 500
@@ -90,7 +91,7 @@ function Game:enter(previous, levelIndex)
 	self.checkCollision = true
 	self.player = self:loadPlayer()
 	self.levelIndex = levelIndex
-	self.parallax = self.initBG()
+	self.backgroundTile = love.graphics.newImage("asset/sprite/tile/star_bg.png")
 	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
 	local tileMap = self.maps[self.levelIndex]
 
@@ -104,41 +105,6 @@ function Game:enter(previous, levelIndex)
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 	self.world:add(self.unluckyMeter, self.unluckyMeter.pos.x, self.unluckyMeter.pos.y,
 		self.unluckyMeter.containerOptions.width, self.unluckyMeter.containerOptions.height)
-end;
-
--- From shove tutorial on parallax scrolling
----@return table
-function Game.initBG()
-  local parallax = {
-    layers = {},
-    scrollAmplitude = 600,
-    currentX = 0,            -- Current scroll position
-    time = 0,                -- Time counter for scroll animation
-    speed = 0.15
-  }
-  local layerImages = {
-  	{img = love.graphics.newImage("asset/sprite/tile/TILE_Stars_1_ANIMATED.png"), depth = 1.0, name = "layer_01"},
-  	{img = love.graphics.newImage("asset/sprite/tile/TILE_Stars_2_ANIMATED.png"), depth = 0.5, name = "layer_02"}
-  }
-  local vW = shove.getViewportWidth()
-  local vH = shove.getViewportHeight()
-  for i,layer in ipairs(layerImages) do
-  	local w,h = layer.img:getDimensions()
-  	local sx = vH / w
-  	local sy = vH / h
-  	local scale = math.max(sx, sy) * 1.2
-  	parallax.layers[i] = {
-  		img = layer.img,
-  		depth = layer.depth,
-  		name = layer.name,
-  		scale = scale,
-  		zIndex = 90 - (1 * 2) -- zIndex goes up -> closer to foreground
-  	}
-
-  	shove.createLayer(layer.name, {zIndex = parallax.layers[i].zIndex})
-  end
-  shove.createLayer("background", {zIndex = 5})
-	return parallax
 end;
 
 ---@param playerPos table
@@ -301,7 +267,6 @@ function Game:update(dt)
 
 			self.soundManager:update(dt)
 			self:updateCamera(dt)
-			self:updateParallax(dt)
 			self.unluckyMeter:update(dt)
 		end
 	end
@@ -313,18 +278,6 @@ function Game:updateCamera(dt)
 	self.camera.x = self.camera.x + (tx - self.camera.x) * self.camera.speed * dt
 	self.camera.y = self.camera.y + (ty - self.camera.y) * self.camera.speed * dt
 end;
-
-function Game:updateParallax(dt)
-	-- -- for time based animation like rain
-	-- self.parallax.time = self.parallax.time + dt
-	-- self.parallax.currentX = math.sin(self.parallax.time * self.parallax.speed) * self.parallax.scrollAmplitude
-
-	-- for movement based animation like scrolling bg
-	if not self.player.isBlocked then
-		self.parallax.currentX = self.parallax.currentX + self.player.moveDir * self.player.speed * dt
-	end
-end;
-
 
 function Game:draw()
 	shove.beginDraw()
@@ -353,25 +306,18 @@ function Game:draw()
 end;
 
 function Game:drawBackground()
-		-- parallax scrolling background
-	for i,layer in ipairs(self.parallax.layers) do
-		shove.beginLayer(layer.name)
-		local offsetX = self.parallax.currentX * layer.depth
-		local vW = shove.getViewportWidth()
-		local vH = shove.getViewportHeight()
-		local imgWidth = layer.img:getWidth() * layer.scale
-		local imgHeight = layer.img:getHeight() * layer.scale
-		local posY = vH - imgHeight
-		local totalWidthNeeded = vW + self.parallax.scrollAmplitude * 2 * layer.depth
-		local copiesNeeded = math.ceil(totalWidthNeeded / imgWidth)
-		local baseX = offsetX % imgWidth
-
-		for j=0, copiesNeeded do
-			local drawX = baseX - imgWidth + (j * imgWidth)
-			love.graphics.draw(layer.img, drawX, posY, 0, layer.scale, layer.scale)
+	shove.beginLayer("background")
+	local tileSize = 32
+	local startX = math.floor(self.camera.x / tileSize) * tileSize
+	local startY = math.floor(self.camera.y / tileSize) * tileSize
+	local vW = shove.getViewportWidth()
+	local vH = shove.getViewportHeight()	
+	for x = startX - tileSize, startX + vW + tileSize, tileSize do
+		for y = startY - tileSize, startY + vH + tileSize, tileSize do
+			love.graphics.draw(self.backgroundTile, x, y)
 		end
-		shove.endLayer()
 	end
+	shove.endLayer()
 end;
 
 function Game:drawTiles()
