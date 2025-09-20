@@ -1,6 +1,7 @@
 local SplashScreen = {}
 
 function SplashScreen:init()
+	self.numLevels = 3
 end;
 
 ---@param previous table Previously active State
@@ -25,7 +26,9 @@ function SplashScreen:enter(previous, levelIndex)
 
 	self.text = {
 		"Something's wrong at the pole station! [bounce]Let's check it out![/bounce]",
-		"[shake]The city is in chaos![/shake]"
+		"[shake]The city is in chaos![/shake]",
+		"Consider yourself lucky to have made it this far",
+		"You saved the universe! Press any button to close the game."
 	}
 	self:start()
 end;
@@ -37,6 +40,9 @@ end;
 ---@param joystick string
 ---@param button string
 function SplashScreen:gamepadpressed(joystick, button)
+	if self.nextLevel > self.numLevels then
+		love.event.quit()
+	end
 	if button == 'a' then
 		Gamestate.switch(States["Game"], self.nextLevel)
 	end
