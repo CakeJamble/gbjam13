@@ -129,7 +129,7 @@ end;
 
 function ProgressBar:update(dt)
 	if self.horizontal then
-		local threshold = self.containerOptions.width * 0.95
+		local threshold = self.containerOptions.width * 0.97  -- Changed to 98% for better timing
 		if self.meterOptions.width >= threshold and not self.isUnlucky then
 			self.isUnlucky = true
 			Signal.emit('OnUnlucky')
@@ -140,7 +140,7 @@ function ProgressBar:update(dt)
 		end
 	else
 		-- For vertical meters, check height
-		local threshold = -self.containerOptions.height * 0.95
+		local threshold = -self.containerOptions.height * 0.97  -- Changed to 98% for better timing
 		if self.meterOptions.height <= threshold and not self.isUnlucky then
 			self.debugMessage = "UNLUCKY TRIGGERED (V): " .. self.meterOptions.height .. "/" .. -self.containerOptions.height .. " (threshold: " .. threshold .. ")"
 			self.isUnlucky = true

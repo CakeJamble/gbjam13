@@ -23,19 +23,29 @@ function Game:init()
 	self.soundManager = SoundManager(AllSounds.music)
 	self.sfxManager = SoundManager(AllSounds.sfx)
 	self.paused = false
-	self.showUnluckyMessage = false
+	self.showUnluckyImage = false
+	self.showLuckReturnedImage = false
+	self.isCurrentlyUnlucky = false
+	self.uhohImage = love.graphics.newImage('asset/sprite/UHOH.png')
+	self.luckReturnedImage = love.graphics.newImage('asset/sprite/YOURLUCKHASRETURNED.png')
 	self.uiTextColor = {240/255, 225/255, 209/255, 1}
-	self.unluckyMessageBox = Text.new("left", {
-		color = {0.9,0.9,0.9,0.95},
-	})
-	self.unluckyMessage = "[bounce]Your luck has turned...[/bounce]"
+	
 	Signal.register('OnUnlucky',
 		function()
-			self.showUnluckyMessage = true
-			self.unluckyMessageBox:send(self.unluckyMessage, 140)
-			Timer.after(3, function()
-				self.showUnluckyMessage = false
-			end)
+			self.showUnluckyImage = true
+			self.isCurrentlyUnlucky = true
+		end)
+
+	Signal.register('OnUnluckyEnd',
+		function()
+			if self.isCurrentlyUnlucky then
+				self.showUnluckyImage = false
+				self.showLuckReturnedImage = true
+				self.isCurrentlyUnlucky = false
+				Timer.after(2, function()
+					self.showLuckReturnedImage = false
+				end)
+			end
 		end)
 
 	Signal.register('OnGetClover', function(clover)
@@ -316,9 +326,6 @@ function Game:draw()
 		enemy:draw()
 	end
 	self.player:draw()
-	if self.showUnluckyMessage then
-		self.unluckyMessageBox:draw(self.player.pos.x - 25, self.player.pos.y + 40)
-	end
 	if self.drawHitboxes then
 		self:drawCollision()
 	end
@@ -382,6 +389,22 @@ function Game:drawUI()
 	love.graphics.origin()
 	local screenWidth = shove.getViewportWidth()
 	local screenHeight = shove.getViewportHeight()
+	
+	-- Draw UHOH image at top center when unlucky
+	if self.showUnluckyImage then
+		love.graphics.setColor(1, 1, 1, 1)
+		local uhohWidth = self.uhohImage:getWidth()
+		local uhohX = (screenWidth - uhohWidth) / 2
+		love.graphics.draw(self.uhohImage, uhohX, 8)
+	end
+	
+	-- i think this is too much but maybe we want it
+	-- if self.showLuckReturnedImage then
+	-- 	love.graphics.setColor(1, 1, 1, 1)
+	-- 	local luckReturnedWidth = self.luckReturnedImage:getWidth()
+	-- 	local luckReturnedX = (screenWidth - luckReturnedWidth) / 2
+	-- 	love.graphics.draw(self.luckReturnedImage, luckReturnedX, 8)
+	-- end
 	
 	-- Draw HP (bottom-left)
 	love.graphics.setColor(self.uiTextColor)
