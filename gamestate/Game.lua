@@ -492,6 +492,7 @@ function Game:drawUI()
 	
 	-- Draw luck meter (bottom-right)
 	local luckThreshold = self.unluckyMeter.containerOptions.width * 0.035
+	if self.unluckyMeter.meterOptions.width <= luckThreshold then
 		love.graphics.setColor(217/255, 151/255, 65/255, 1)
 	else
 		love.graphics.setColor(self.uiTextColor)
