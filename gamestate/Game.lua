@@ -56,6 +56,7 @@ function Game:init()
 	Signal.register('OnGetClover', function(clover)
 		self.unluckyMeter:tweenLucky(1, clover.amount)
 		self.sfxManager:play("clover_pickup")
+		self.player.health = math.min(self.player.health + 3, 5)
 	end)
 	Signal.register("OnLampCollision", function(amount, dt)
 		local val = amount * dt
@@ -167,7 +168,7 @@ function Game.initUnluckyMeter(playerPos)
 	local options = {
 		x = x,
 		y = y,
-		w = 60,
+		w = 120,
 		h = 12,
 		min=0,max=100,
 		horizontal = true
@@ -478,7 +479,11 @@ function Game:drawUI()
 	-- end
 	
 	-- Draw HP (bottom-left)
-	love.graphics.setColor(self.uiTextColor)
+	if self.player.health <= 1 then
+		love.graphics.setColor(217/255, 151/255, 65/255, 1)
+	else
+		love.graphics.setColor(self.uiTextColor)
+	end
 	love.graphics.draw(self.hpLabel, 2, screenHeight - 8)
 	love.graphics.setColor(217/255, 151/255, 65/255, 1)
 	for i = 1, self.player.health do
@@ -486,9 +491,13 @@ function Game:drawUI()
 	end
 	
 	-- Draw luck meter (bottom-right)
-	love.graphics.setColor(self.uiTextColor)
-	love.graphics.draw(self.luckLabel, screenWidth - 59, screenHeight - 7)
-	self.unluckyMeter:draw(screenWidth - 32, screenHeight - 7)
+	local luckThreshold = self.unluckyMeter.containerOptions.width * 0.035
+		love.graphics.setColor(217/255, 151/255, 65/255, 1)
+	else
+		love.graphics.setColor(self.uiTextColor)
+	end
+	love.graphics.draw(self.luckLabel, screenWidth - 87, screenHeight - 7)
+	self.unluckyMeter:draw(screenWidth - 60, screenHeight - 7)
 	
 	love.graphics.pop()
 end;

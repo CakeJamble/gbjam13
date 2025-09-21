@@ -25,7 +25,7 @@ function ProgressBar:init(options)
 	}
 
 	if self.horizontal then
-		self.meterStartingWidth = 0
+		self.meterStartingWidth = options.w
 		self.meterOptions = {
 			mode = 'fill',
 			width = self.meterStartingWidth,
@@ -33,7 +33,7 @@ function ProgressBar:init(options)
 			value = 0
 		}
 	else
-		self.meterStartingHeight = 0
+		self.meterStartingHeight = -options.h
 		self.meterOptions = {
 			mode = 'fill',
 			width = options.w,
@@ -42,7 +42,7 @@ function ProgressBar:init(options)
 		}
 	end
 	self.tween = nil
-	self.duration = 15
+	self.duration = 20
 	self:tweenUnlucky(self.duration)
 end;
 
@@ -52,9 +52,9 @@ function ProgressBar:tweenUnlucky(duration, value)
 	if self.tween then self.tween:stop() end
 
 	if self.horizontal then
-		self.tween = flux.to(self.meterOptions, duration, {width = self.containerOptions.width})
+		self.tween = flux.to(self.meterOptions, duration, {width = 0})
 	else
-		self.tween = flux.to(self.meterOptions, duration, {height = -self.containerOptions.height})
+		self.tween = flux.to(self.meterOptions, duration, {height = 0}) 
 	end
 end;
 
@@ -63,22 +63,22 @@ function ProgressBar:tweenLucky(duration, value)
 	
 	if self.horizontal then
 		local curr = self.meterOptions.width
-		local target = math.max(0, curr - value)
+		local target = math.min(self.containerOptions.width, curr + value)
 
 		flux.to(self.meterOptions, duration, {width = target})
 		:oncomplete(function()
-			local remainingMeterDistance = self.containerOptions.width - target
+			local remainingMeterDistance = target
 			local maxDistance = self.containerOptions.width
 			local newDuration = (remainingMeterDistance / maxDistance) * self.duration
 			self:tweenUnlucky(newDuration)
 		end)
 	else
 		local curr = self.meterOptions.height
-		local target = math.min(0, curr + value)
+		local target = math.max(-self.containerOptions.height, curr - value)
 
 		flux.to(self.meterOptions, duration, {height = target})
 		:oncomplete(function()
-			local remainingMeterDistance = math.abs(-self.containerOptions.height - target)
+			local remainingMeterDistance = math.abs(target)
 			local maxDistance = self.containerOptions.height
 			local newDuration = (remainingMeterDistance / maxDistance) * self.duration
 			self:tweenUnlucky(newDuration)
@@ -120,34 +120,33 @@ end;
 function ProgressBar:reset()
 	if self.tween then self.tween:stop(); self.tween = nil; end
 	if self.horizontal then
-		self.meterOptions.width = self.meterStartingWidth
+		self.meterOptions.width = self.containerOptions.widthl
 	else
-		self.meterOptions.height = self.meterStartingHeight
+		self.meterOptions.height = -self.containerOptions.heightl
 	end
 	self.meterOptions.value = 0
 end;
 
 function ProgressBar:update(dt)
 	if self.horizontal then
-		local threshold = self.containerOptions.width * 0.97  -- Changed to 98% for better timing
-		if self.meterOptions.width >= threshold and not self.isUnlucky then
+		local threshold = self.containerOptions.width * 0.03  -- Trigger unlucky when 3% remaining (nearly empty)
+		if self.meterOptions.width <= threshold and not self.isUnlucky then
 			self.isUnlucky = true
 			Signal.emit('OnUnlucky')
 			if self.tween then self.tween:stop() end
 		end
-		if self.isUnlucky and self.meterOptions.width < threshold then
+		if self.isUnlucky and self.meterOptions.width > threshold then
 			self.isUnlucky = false
 		end
 	else
-		-- For vertical meters, check height
-		local threshold = -self.containerOptions.height * 0.97  -- Changed to 98% for better timing
-		if self.meterOptions.height <= threshold and not self.isUnlucky then
-			self.debugMessage = "UNLUCKY TRIGGERED (V): " .. self.meterOptions.height .. "/" .. -self.containerOptions.height .. " (threshold: " .. threshold .. ")"
+		-- For vertical meters, check height  
+		local threshold = -self.containerOptions.height * 0.03
+		if self.meterOptions.height >= threshold and not self.isUnlucky then
 			self.isUnlucky = true
 			Signal.emit('OnUnlucky')
 			if self.tween then self.tween:stop() end
 		end
-		if self.isUnlucky and self.meterOptions.height > threshold then
+		if self.isUnlucky and self.meterOptions.height < threshold then
 			self.isUnlucky = false
 		end
 	end

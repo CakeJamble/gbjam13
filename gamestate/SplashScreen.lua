@@ -24,12 +24,11 @@ function SplashScreen:enter(previous, levelIndex)
 	})
 
 	self.text = {
-		"Something's wrong at the pole station! [bounce]Let's check it out![/bounce]",
-		"[shake]The city is in chaos![/shake]",
-		"Thanks for playing! [bounce]Credits music plays forever![/bounce]",
+		'"Cookie time already? I should save the city first though..."',
+		"Despite Fortune's efforts, the city is absolutely luckless!",
+		"",
 	}
 	
-	-- Play credits music for final splash screen (after level 3)
 	if self.completedLevel >= self.numLevels then
 		self.song = self.musicManager.sounds["credits"][1]
 		self.song:play()
@@ -73,7 +72,7 @@ function SplashScreen:draw()
 	shove.beginDraw()
 	shove.beginLayer("background")
 	love.graphics.draw(self.bg,0,0)
-	if self.completedLevel <= self.numLevels then
+	if self.completedLevel < self.numLevels then
 		Frame.draw("eb", 0, 100, 160, 44)
 		self.textBox:draw(5, 100)
 	end

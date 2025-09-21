@@ -17,7 +17,7 @@ function TitleScreen:init()
 
 	self.musicManager = SoundManager(AllSounds.music)
 	self.sfxManager = SoundManager(AllSounds.sfx.player)
-	self.gameName = "Game Name Placeholder"
+	self.gameName = ""
 
 end;
 
