@@ -74,7 +74,8 @@ function Player:setGun(gun)
 end;
 
 ---@param amount integer
-function Player:takeDamage(amount)
+---@param knockbackDir number|nil Optional knockback direction (-1 for left, 1 for right)
+function Player:takeDamage(amount, knockbackDir)
     if self.canTakeDamage and not self.dead then
         amount = amount or 1
         self.health = math.max(0, self.health - amount)
@@ -86,15 +87,16 @@ function Player:takeDamage(amount)
             Timer.after(t, function() Signal.emit("OnDeath") end)
         else
             self.canTakeDamage = false
-            self:stumbleAndBlink()
+            self:stumbleAndBlink(knockbackDir)
         end
     end
 end;
 
-function Player:stumbleAndBlink()
+function Player:stumbleAndBlink(knockbackDir)
     self.showHealth = true
     self.sfx:play("stun")
-    local knockback = -self.moveDir * 35
+    local direction = knockbackDir or (-self.moveDir)
+    local knockback = direction * 35
     local px = self.pos.x
     flux.to(self.pos, 0.5, {x = px + knockback}):ease("quadout")
     self.blinkTween = flux.to(self, self.invulnTime, {blink = 1})

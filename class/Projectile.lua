@@ -20,14 +20,6 @@ function Projectile:init(data, owner)
 	self.owner = owner
 end;
 
----@param other Entity
-function Projectile:onCollision(other)
-	if other ~= self.owner and other.type ~= self.owner.type then
-		other:takeDamage(self.damage)
-		print('damage dealt')
-	end
-end;
-
 ---@param dt number
 function Projectile:update(dt)
 	if not self.active then return end
@@ -51,8 +43,10 @@ function Projectile:update(dt)
 		if self.owner.type == "player" and col.other.type == "ground" then
 			self.active = false
 		elseif col.other.canTakeDamage and not col.other.dead and col.other.type ~= self.owner.type then
-			col.other:takeDamage(self.damage)
+			local knockbackDir = self.v.x > 0 and 1 or -1
+			col.other:takeDamage(self.damage, knockbackDir)
 			self.active = false
+			break 
 		end
 	end
 
