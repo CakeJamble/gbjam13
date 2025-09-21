@@ -7,7 +7,7 @@ function Lamp:init(data)
 	self.name = "End Level Flag"
 	self.solid = false
 	self.pos = {x=data.x, y=data.y}
-	self.dims = {w=16, h=16}
+	self.dims = {w=8, h=16}
 	self.amount = 10
 end;
 

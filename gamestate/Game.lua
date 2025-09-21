@@ -2,6 +2,9 @@ local bump = require('lib.bump')
 local loadMaps = require('util.map_loader')
 local loadEnemies = require('util.enemy_loader')
 local tileRegistry = require('level.tile_registry')
+local enemyRegistry = require('level.enemy_registry')
+local shove = require('lib.shove')
+local Camera = require('lib.hump.camera')
 local Player = require('class.Player')
 local Timer = require('lib.hump.timer')
 local Gun = require('class.Gun')
@@ -170,6 +173,12 @@ function Game:addToWorld()
 	end
 
 	self.world:add(self.player, self.player.pos.x, self.player.pos.y, self.player.dims.w, self.player.dims.h)
+
+	local vH = shove.getViewportHeight()
+	local playerSpawnX = 2 * self.tileSize  -- col 2
+	local playerSpawnY = 76 * self.tileSize  -- row 76
+	self.camera.x = playerSpawnX - 80
+	self.camera.y = playerSpawnY - (vH/2 - 8)
 
 	for _,enemy in ipairs(self.enemies) do
 		self.world:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
