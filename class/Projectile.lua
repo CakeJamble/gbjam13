@@ -30,7 +30,7 @@ function Projectile:update(dt)
 		function(item, other)
 			if other == self.owner then
 				return nil
-			elseif self.owner.type == "player" and other.type == "ground" then
+			elseif other.type == "ground" then
 				return "slide"
 			else
 				return "cross"
@@ -40,7 +40,7 @@ function Projectile:update(dt)
 	self.pos.y = actualY
 
 	for _,col in ipairs(cols) do
-		if self.owner.type == "player" and col.other.type == "ground" then
+		if col.other.type == "ground" then
 			self.active = false
 		elseif col.other.canTakeDamage and not col.other.dead and col.other.type ~= self.owner.type then
 			local knockbackDir = self.v.x > 0 and 1 or -1

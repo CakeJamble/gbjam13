@@ -29,6 +29,8 @@ function Game:init()
 	self.showUnluckyImage = false
 	self.showLuckReturnedImage = false
 	self.isCurrentlyUnlucky = false
+	self.lampChargeSound = nil
+	self.isUnderLamp = false
 	self.uhohImage = love.graphics.newImage('asset/sprite/UHOH.png')
 	self.luckReturnedImage = love.graphics.newImage('asset/sprite/YOURLUCKHASRETURNED.png')
 	self.uiTextColor = {240/255, 225/255, 209/255, 1}
@@ -53,19 +55,35 @@ function Game:init()
 
 	Signal.register('OnGetClover', function(clover)
 		self.unluckyMeter:tweenLucky(1, clover.amount)
+		self.sfxManager:play("clover_pickup")
 	end)
 	Signal.register("OnLampCollision", function(amount, dt)
 		local val = amount * dt
 		self.unluckyMeter:tweenLucky(dt, val)
+		
+		if not self.isUnderLamp then
+			self.isUnderLamp = true
+			if self.lampChargeSound then
+				self.lampChargeSound:stop()
+			end
+			self.lampChargeSound = self.sfxManager.sounds["lamp"]["charge"]["light_charge"][1]
+			self.lampChargeSound:setLooping(true)
+			self.lampChargeSound:play()
+		end
 		-- self.player.currentAnimationTag = "in_light"
 	end)
 	Signal.register("EndLevel",function()
-		self.levelIndex = self.levelIndex + 1
-		print(self.levelIndex)
 		self.checkCollision = false
 		self.player.dead = true
 		self.song:stop()
 		self.unluckyMeter:stop()
+		
+		if self.lampChargeSound then
+			self.lampChargeSound:stop()
+			self.lampChargeSound = nil
+		end
+		self.isUnderLamp = false
+		
 		local sfx = self.sfxManager:play("level_complete")
 		local dur = sfx:getDuration()
 		Timer.after(dur, function()
@@ -74,6 +92,13 @@ function Game:init()
 	end)
 	Signal.register("OnDeath", function()
 		self.song:stop()
+		
+		if self.lampChargeSound then
+			self.lampChargeSound:stop()
+			self.lampChargeSound = nil
+		end
+		self.isUnderLamp = false
+		
 		self.levelIndex = 1
 
 		self.checkCollision = false
@@ -88,6 +113,17 @@ end;
 
 ---@param previous table Previously active State
 function Game:enter(previous, levelIndex)
+	-- Reset UI state for new level
+	self.showUnluckyImage = false
+	self.showLuckReturnedImage = false
+	self.isCurrentlyUnlucky = false
+	
+	if self.lampChargeSound then
+		self.lampChargeSound:stop()
+		self.lampChargeSound = nil
+	end
+	self.isUnderLamp = false
+	
 	if self.level then
 	    for i,tile in ipairs(self.level) do
 	        table.remove(self.level, i)
@@ -305,6 +341,32 @@ function Game:update(dt)
 			end
 
 			self.player:update(dt)
+
+			if self.isUnderLamp then
+				local playerRect = {
+					x = self.player.pos.x,
+					y = self.player.pos.y,
+					w = self.player.dims.w,
+					h = self.player.dims.h
+				}
+				
+				local stillUnderLamp = false
+				local items, len = self.world:queryRect(playerRect.x, playerRect.y, playerRect.w, playerRect.h)
+				for _, item in ipairs(items) do
+					if item.type == "item" and item.name == "Lamp" then
+						stillUnderLamp = true
+						break
+					end
+				end
+				
+				if not stillUnderLamp then
+					self.isUnderLamp = false
+					if self.lampChargeSound then
+						self.lampChargeSound:stop()
+						self.lampChargeSound = nil
+					end
+				end
+			end
 
 			self.soundManager:update(dt)
 			self:updateCamera(dt)

@@ -89,14 +89,14 @@ end;
 function TitleScreen:gamepadpressed(joystick, button)
 	if self.canProceed and button == "start" then
 		self.song:stop()
-		Gamestate.switch(States["SplashScreen"])
+		Gamestate.switch(States["Game"], 1)  -- Go directly to level 1
 	end
 end;
 
 function TitleScreen:keypressed(key)
 	if self.canProceed and key == "return" then
 		self.song:stop()
-		Gamestate.switch(States["SplashScreen"])
+		Gamestate.switch(States["Game"], 1)  -- Go directly to level 1
 	end
 end;
 

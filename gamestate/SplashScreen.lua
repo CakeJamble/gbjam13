@@ -1,20 +1,19 @@
 local SplashScreen = {}
+local SoundManager = require('class.SoundManager')
 
 function SplashScreen:init()
 	self.numLevels = 3
+	self.musicManager = SoundManager(AllSounds.music)
 end;
 
 ---@param previous table Previously active State
 function SplashScreen:enter(previous, levelIndex)
-	-- if self.world then
-	-- 	local items = self.world:getItems()
-	-- 	for i=1,#items do
-	-- 		self.world:remove(items[i])
-	-- 	end
-	-- end
-	self.nextLevel = levelIndex or 1
+	-- levelIndex is the level that was just completed
+	self.completedLevel = levelIndex or 1
+	self.nextLevel = self.completedLevel + 1
+	
 	shove.createLayer("background", {zIndex = 1})
-	local fname = "splash_screen_" .. self.nextLevel .. ".png"
+	local fname = "splash_screen_" .. self.completedLevel .. ".png"
 	self.bg = love.graphics.newImage("asset/sprite/" .. fname)
 	self.textBox = Text.new("left",
 	{
@@ -27,35 +26,39 @@ function SplashScreen:enter(previous, levelIndex)
 	self.text = {
 		"Something's wrong at the pole station! [bounce]Let's check it out![/bounce]",
 		"[shake]The city is in chaos![/shake]",
-		"Consider yourself lucky to have made it this far",
-		"You saved the universe! Press any button to close the game."
+		"Thanks for playing! [bounce]Credits music plays forever![/bounce]",
 	}
+	
+	-- Play credits music for final splash screen (after level 3)
+	if self.completedLevel >= self.numLevels then
+		self.song = self.musicManager.sounds["credits"][1]
+		self.song:play()
+	end
+	
 	self:start()
 end;
 
 function SplashScreen:start()
-	self.textBox:send(self.text[self.nextLevel], 140)
+	self.textBox:send(self.text[self.completedLevel], 140)
 end;
 
 ---@param joystick string
 ---@param button string
 function SplashScreen:gamepadpressed(joystick, button)
-	if (button == "a" or button == "b" or
-	button == "dpup" or button == "dpdown" or button == "dpleft" or button == "dpright"
-	or button == "start" or button == "select") and self.nextLevel > self.numLevels then
-		love.event.quit()
+	if self.completedLevel >= self.numLevels then
+		return
 	end
+	
 	if button == 'a' then
 		Gamestate.switch(States["Game"], self.nextLevel)
 	end
 end;
 
 function SplashScreen:keypressed(key)
-	if (key == "z" or key == "x" or
-	key == "up" or key == "down" or key == "left" or key == "right"
-	or key == "return" or key == "tab") and self.nextLevel > self.numLevels then
-		love.event.quit()
+	if self.completedLevel >= self.numLevels then
+		return
 	end
+	
 	if key == 'z' then
 		Gamestate.switch(States["Game"], self.nextLevel)
 	end
@@ -70,8 +73,10 @@ function SplashScreen:draw()
 	shove.beginDraw()
 	shove.beginLayer("background")
 	love.graphics.draw(self.bg,0,0)
-	Frame.draw("eb", 0, 100, 160, 44)
-	self.textBox:draw(5, 100)
+	if self.completedLevel <= self.numLevels then
+		Frame.draw("eb", 0, 100, 160, 44)
+		self.textBox:draw(5, 100)
+	end
 	shove.endLayer()
 	shove.endDraw()
 end;
