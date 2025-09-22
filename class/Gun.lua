@@ -19,6 +19,7 @@ function Gun:init(data)
 	self.direction = {x=1,y=0}
 	self.isUnlucky = false
 	self.owner = data.owner
+	self.sprite = Gun.sprite
 
 	Signal.register("OnUnluckyEnd", function() self.isUnlucky = false end)
 end;
@@ -49,7 +50,7 @@ function Gun:shoot(isUnlucky)
 				y = -self.direction.y * self.projectileSpeed.y
 			},
 			w = 8, h = 8,
-			sprite = Gun.sprite,
+			sprite = self.sprite,
 			damage = self.damage,
 			world = self.world
 		}

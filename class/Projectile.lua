@@ -50,10 +50,11 @@ function Projectile:update(dt)
 		end
 	end
 
-	if self.pos.x < -self.dims.w or self.pos.x > love.graphics.getWidth() or
-		self.pos.y < -self.dims.h or self.pos.y > love.graphics.getHeight() then
-		self.active = false
-	end
+-- was using the size of the game window in pixels (bad)
+	-- if self.pos.x < -self.dims.w or self.pos.x > love.graphics.getWidth() or
+	-- 	self.pos.y < -self.dims.h or self.pos.y > love.graphics.getHeight() then
+	-- 	self.active = false
+	-- end
 end;
 
 function Projectile:draw()

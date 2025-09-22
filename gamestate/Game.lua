@@ -156,6 +156,7 @@ function Game:enter(previous, levelIndex)
 	self:addToWorld()
 	local songName = "level_" .. self.levelIndex
 	self.song = self.soundManager.sounds[songName][1]
+	self.song:setLooping(true)
 	self.song:play()
 	self.unluckyMeter = self.initUnluckyMeter(self.player.pos)
 	self.world:add(self.unluckyMeter, self.unluckyMeter.pos.x, self.unluckyMeter.pos.y,

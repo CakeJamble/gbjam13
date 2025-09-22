@@ -4,7 +4,7 @@ Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
 local flux = require('lib.flux')
 local loadAudio = require('util.audio_loader')
-local moonshine = require('lib.moonshine')
+-- local moonshine = require('lib.moonshine')
 
 ---@param args string[]
 ---@return integer
@@ -25,7 +25,7 @@ end;
 ---@param args string[]
 function love.load(args)
 	----- Screen
-	-- love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
+	love.graphics.setBackgroundColor(24/255, 27/255, 36/255)
 	local scale = parseArgs(args) --> 8
 
 	WindowWidth, WindowHeight = 160 * scale, 144 * scale
@@ -38,7 +38,7 @@ function love.load(args)
 
 
 local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
-shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
+shove.setWindowMode(WindowWidth * 0.5, WindowHeight * 0.5, {
   resizable = true,
   vsync = true,
   minwidth = 160,
@@ -47,11 +47,11 @@ shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
 
 
 	----- Moonshine Shader
-	DMG = moonshine.effects.dmg()
-	shove.addGlobalEffect(DMG.shader)
-	ShaderIndex = 1
-	PaletteOpacity = {visible = false, a = 1}
-	shove.createLayer("palette", {zIndex = 20000})
+	-- DMG = moonshine.effects.dmg()
+	-- shove.addGlobalEffect(DMG.shader)
+	-- ShaderIndex = 1
+	-- PaletteOpacity = {visible = false, a = 1}
+	-- shove.createLayer("palette", {zIndex = 20000})
 
 
 	----- Text Boxes & Frames
@@ -119,11 +119,11 @@ function love.update(dt)
 	flux.update(dt)
 end;
 
-function love.draw()
-	if PaletteOpacity.visible then
-		local paletteName = DMG.getName(1 + (ShaderIndex % 11))
-		love.graphics.setColor(1,1,1,PaletteOpacity.a)
-		love.graphics.print(paletteName)
-		love.graphics.setColor(1,1,1,1)
-	end
-end;
+-- function love.draw()
+-- 	if PaletteOpacity.visible then
+-- 		local paletteName = DMG.getName(1 + (ShaderIndex % 11))
+-- 		love.graphics.setColor(1,1,1,PaletteOpacity.a)
+-- 		love.graphics.print(paletteName)
+-- 		love.graphics.setColor(1,1,1,1)
+-- 	end
+-- end;
