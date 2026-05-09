@@ -5,13 +5,7 @@ local SoundManager = require('class.SoundManager')
 local TitleScreen = {}
 
 function TitleScreen:init()
-	shove.createLayer("background", {zIndex = 1})
 	self.background = love.graphics.newImage('asset/sprite/title_bg.png')
-	
-	shove.createLayer("foreground", {zIndex = 5})
-
-
-	shove.createLayer("ui", {zIndex = 10})
 	self.showInstructions = false
 	self.instuctions = "Start/Enter to begin"
 
@@ -121,27 +115,22 @@ function TitleScreen:updateAnimation(dt)
 end;
 
 function TitleScreen:draw()
-	shove.beginDraw()
+	push:apply("start")
 
-	shove.beginLayer("background")
 	love.graphics.setColor(1,1,1,self.bgOptions.a)
 	love.graphics.draw(self.background, self.bgOptions.x, self.bgOptions.y)
 	love.graphics.setColor(1,1,1,1)
-	shove.endLayer()
 
-	shove.beginLayer("foreground")
 	love.graphics.draw(self.lamp[self.lamp.state], self.lamp.x, self.lamp.y)
 	self:animatePlayer()
-	shove.endLayer()
 
-	shove.beginLayer("ui")
 	if self.showInstructions then
 		love.graphics.setColor(1,1,1, self.uiOptions.a)
 		love.graphics.print(self.gameName, 27, 10)
 		love.graphics.print(self.instuctions, 10, 120)
 	end
-	shove.endLayer()
-	shove.endDraw()
+
+	push:apply("end")
 end;
 
 function TitleScreen:animatePlayer()

@@ -1,5 +1,5 @@
 Gamestate = require('lib.hump.gamestate')
-shove = require('lib.shove')
+push = require('lib.push.push')
 Text = require('lib.sysl-text.slog-text')
 Frame = require('lib.sysl-text.slog-frame')
 local flux = require('lib.flux')
@@ -30,28 +30,19 @@ function love.load(args)
 
 	WindowWidth, WindowHeight = 160 * scale, 144 * scale
 
-	shove.setResolution(160, 144, {
-		fitMethod = "pixel",
-		scalingFilter = "nearest",
-		renderMode = "layer" -- change to "layer" if you want to use drawing layers
+	local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
+	push:setupScreen(160, 144, math.floor(desktopWidth * 0.5), math.floor(desktopHeight * 0.5), {
+		pixelperfect = true,
+		resizable = true,
+		canvas = true,
 	})
-
-
-local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
-shove.setWindowMode(desktopWidth * 0.5, desktopHeight * 0.5, {
-  resizable = true,
-  vsync = true,
-  minwidth = 160,
-  minheight = 144
-})
 
 
 	----- Moonshine Shader
 	DMG = moonshine.effects.dmg()
-	shove.addGlobalEffect(DMG.shader)
+	push:setShader(DMG.shader)
 	ShaderIndex = 1
 	PaletteOpacity = {visible = false, a = 1}
-	shove.createLayer("palette", {zIndex = 20000})
 
 
 	----- Text Boxes & Frames
@@ -113,6 +104,10 @@ function love.keypressed(key)
 				PaletteOpacity.a = 1
 			end)
 	end
+end;
+
+function love.resize(w, h)
+	push:resize(w, h)
 end;
 
 function love.update(dt)

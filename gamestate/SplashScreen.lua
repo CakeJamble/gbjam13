@@ -12,7 +12,6 @@ function SplashScreen:enter(previous, levelIndex)
 	self.completedLevel = levelIndex or 1
 	self.nextLevel = self.completedLevel + 1
 	
-	shove.createLayer("background", {zIndex = 1})
 	local fname = "splash_screen_" .. self.completedLevel .. ".png"
 	self.bg = love.graphics.newImage("asset/sprite/" .. fname)
 	self.textBox = Text.new("left",
@@ -69,15 +68,13 @@ function SplashScreen:update(dt)
 end;
 
 function SplashScreen:draw()
-	shove.beginDraw()
-	shove.beginLayer("background")
+	push:apply("start")
 	love.graphics.draw(self.bg,0,0)
 	if self.completedLevel < self.numLevels then
 		Frame.draw("eb", 0, 100, 160, 44)
 		self.textBox:draw(5, 100)
 	end
-	shove.endLayer()
-	shove.endDraw()
+	push:apply("end")
 end;
 
 return SplashScreen

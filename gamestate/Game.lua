@@ -1,9 +1,5 @@
 local bump = require('lib.bump')
-local loadMaps = require('util.map_loader')
-local loadEnemies = require('util.enemy_loader')
-local tileRegistry = require('level.tile_registry')
-local enemyRegistry = require('level.enemy_registry')
-local shove = require('lib.shove')
+local loadSTI = require('util.sti_loader')
 local Camera = require('lib.hump.camera')
 local Player = require('class.Player')
 local Timer = require('lib.hump.timer')
@@ -17,11 +13,7 @@ local Game = {}
 function Game:init()
 	self.tileSize = 8
 	self.drawHitboxes = false
-	shove.createLayer("level", {zIndex = 100})
-	shove.createLayer("ui", {zIndex = 1000})
-	shove.createLayer("background", {zIndex = 5})
 	self.camera = {x=0,y=0, speed = 8, deadzone = {x = 40, y = 32}}
-	self.maps = loadMaps()
 	Gravity = 500
 	self.soundManager = SoundManager(AllSounds.music)
 	self.sfxManager = SoundManager(AllSounds.sfx)
@@ -125,18 +117,6 @@ function Game:enter(previous, levelIndex)
 	end
 	self.isUnderLamp = false
 	
-	if self.level then
-	    for i,tile in ipairs(self.level) do
-	        table.remove(self.level, i)
-	    end
-	end
-
-	if self.enemies then
-	    for i,enemy in ipairs(self.enemies) do
-	        table.remove(self.enemies, i)
-	    end
-	end
-
 	if self.player then self.player = nil end
 	self.world = bump.newWorld(self.tileSize)
 	self.checkCollision = true
@@ -144,16 +124,17 @@ function Game:enter(previous, levelIndex)
 	self.levelIndex = levelIndex
 	self.backgroundTile = love.graphics.newImage("asset/sprite/tile/star_bg.png")
 	self.levelBgTile = love.graphics.newImage("asset/sprite/tile/bg_stripes.png")
-	
+
 	self.hpLabel = love.graphics.newImage("asset/sprite/HP_LABEL.png")
 	self.luckLabel = love.graphics.newImage("asset/sprite/LUCK_LABEL.png")
-	self.enemies = loadEnemies(self.levelIndex, self.tileSize, self.player, self.world)
-	local tileMap = self.maps[self.levelIndex]
 
-	self.level = self:loadLevel(tileMap, self.tileSize)
-	self.levelWidth = self.tileSize * #tileMap[1]
-	self.levelHeight = self.tileSize * #tileMap
-	self:addToWorld()
+	local mapPath = 'level/test.lua'
+	self.stiMap, self.entities, self.levelWidth, self.levelHeight = loadSTI(mapPath, self.world, self.player)
+
+	self.world:add(self.player, self.player.pos.x, self.player.pos.y, self.player.dims.w, self.player.dims.h)
+	local vH = push:getHeight()
+	self.camera.x = self.player.pos.x - 80
+	self.camera.y = self.player.pos.y - (vH/2 - 8)
 	local songName = "level_" .. self.levelIndex
 	self.song = self.soundManager.sounds[songName][1]
 	self.song:play()
@@ -178,7 +159,7 @@ end;
 
 ---@return Player
 function Game:loadPlayer()
-	local col, row = 2, 76
+	local col, row = 2, 16
 	local x = (col - 1) * self.tileSize
 	local y = (row - 1) * self.tileSize
 
@@ -204,51 +185,6 @@ function Game:loadPlayer()
 	return player
 end;
 
-function Game:addToWorld()
-	for _,tile in ipairs(self.level) do
-		self.world:add(tile, tile.pos.x, tile.pos.y, tile.dims.w, tile.dims.h)
-	end
-
-	self.world:add(self.player, self.player.pos.x, self.player.pos.y, self.player.dims.w, self.player.dims.h)
-
-	local vH = shove.getViewportHeight()
-	local playerSpawnX = 2 * self.tileSize  -- col 2
-	local playerSpawnY = 76 * self.tileSize  -- row 76
-	self.camera.x = playerSpawnX - 80
-	self.camera.y = playerSpawnY - (vH/2 - 8)
-
-	for _,enemy in ipairs(self.enemies) do
-		self.world:add(enemy, enemy.pos.x, enemy.pos.y, enemy.dims.w, enemy.dims.h)
-	end
-end;
-
----@param tileMap table
----@param tileSize integer
-function Game:loadLevel(tileMap, tileSize)
-	local tiles = {}
-
-	-- map collision
-	for row=1, #tileMap do
-		for col=1, #tileMap[row] do
-			local tileID = tileMap[row][col]
-			local TileClass = tileRegistry[tileID]
-
-			if TileClass then
-				local data = {
-					x = (col - 1) * 8,
-					y = (row - 1) * 8,
-					w = 8,
-					h = 8,
-				}
-				local tile = TileClass(data)
-				tile.world = self.world
-				table.insert(tiles, tile)
-			end
-		end
-	end
-
-	return tiles
-end;
 
 ---@param joystick string
 ---@param button string
@@ -316,28 +252,22 @@ function Game:update(dt)
 				self.unluckyMessageBox:update(dt)
 			end
 
-			for _,tile in ipairs(self.level) do
-				if tile.update then
-					tile:update(dt)
+			for _,entity in ipairs(self.entities) do
+				if entity.update then
+					entity:update(dt)
 				end
 			end
-			for _,enemy in ipairs(self.enemies) do
-				enemy:update(dt)
-			end
-			
-			for i = #self.enemies, 1, -1 do
-				local enemy = self.enemies[i]
-				
-				-- Remove from collision world immediately when dying starts
-				if enemy.removeFromWorld then
-					-- Use pcall to safely attempt removal
-					pcall(function() self.world:remove(enemy) end)
-					enemy.removeFromWorld = false -- Mark as processed
+
+			for i = #self.entities, 1, -1 do
+				local entity = self.entities[i]
+
+				if entity.removeFromWorld then
+					pcall(function() self.world:remove(entity) end)
+					entity.removeFromWorld = false
 				end
-				
-				-- Fully remove dead enemies from game
-				if enemy.dead then
-					table.remove(self.enemies, i)
+
+				if entity.dead then
+					table.remove(self.entities, i)
 				end
 			end
 
@@ -378,43 +308,50 @@ end;
 
 function Game:updateCamera(dt)
 	local x, y = self.player.pos.x, self.player.pos.y + self.player.lookYOffset.curr
-	local vH = shove.getViewportHeight()
-	local tx,ty = x-80, y-(vH/2 - 8) 
+	local vH = push:getHeight()
+	local tx,ty = x-80, y-(vH/2 - 8)
 	self.camera.x = self.camera.x + (tx - self.camera.x) * self.camera.speed * dt
 	self.camera.y = self.camera.y + (ty - self.camera.y) * self.camera.speed * dt
 end;
 
 function Game:draw()
-	shove.beginDraw()
-	-- outside the push/pop so that it ignores camera
+	push:apply("start")
+	local cx = -math.floor(self.camera.x)
+	local cy = -math.floor(self.camera.y)
+
 	love.graphics.push()
-	love.graphics.translate(-math.floor(self.camera.x), -math.floor(self.camera.y))
-
+	love.graphics.translate(cx, cy)
 	self:drawBackground()
+	love.graphics.pop()
 
-	shove.beginLayer("level")
-	self:drawTiles()
-	for _,enemy in ipairs(self.enemies) do
-		enemy:draw()
+	-- STI renders to its own canvas then blits at (0,0), so camera offset must
+	-- be passed as tx/ty and the call must be outside the translated block.
+	self.stiMap:draw(cx, cy)
+
+	love.graphics.push()
+	love.graphics.translate(cx, cy)
+	for _,entity in ipairs(self.entities) do
+		if entity.draw then
+			entity:draw()
+		end
 	end
 	self.player:draw()
 	if self.drawHitboxes then
 		self:drawCollision()
 	end
-	self:drawUI()
-	shove.endLayer()
 	love.graphics.pop()
-	shove.endDraw()
+
+	self:drawUI()
+	push:apply("end")
 end;
 
 function Game:drawBackground()
-	shove.beginLayer("background")
 	local starTileSize = 32
 	local stripeTileSize = 16
 	local startX = math.floor(self.camera.x / stripeTileSize) * stripeTileSize
 	local startY = math.floor(self.camera.y / stripeTileSize) * stripeTileSize
-	local vW = shove.getViewportWidth()
-	local vH = shove.getViewportHeight()
+	local vW = push:getWidth()
+	local vH = push:getHeight()
 	
 	-- level bg
 	-- for x = startX - stripeTileSize, startX + vW + stripeTileSize, stripeTileSize do
@@ -436,14 +373,8 @@ function Game:drawBackground()
 		end
 	end
 	
-	shove.endLayer()
 end;
 
-function Game:drawTiles()
-	for _,tile in ipairs(self.level) do
-		tile:draw()
-	end
-end;
 
 function Game:drawCollision()
 	love.graphics.setColor(1, 0, 0, 0.5)
@@ -459,8 +390,8 @@ end;
 function Game:drawUI()
 	love.graphics.push()
 	love.graphics.origin()
-	local screenWidth = shove.getViewportWidth()
-	local screenHeight = shove.getViewportHeight()
+	local screenWidth = push:getWidth()
+	local screenHeight = push:getHeight()
 	
 	-- Draw UHOH image at top center when unlucky
 	if self.showUnluckyImage then

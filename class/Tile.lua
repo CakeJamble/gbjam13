@@ -11,8 +11,7 @@ function Tile:init(data)
 	self.dims = {
 		w = data.w, h = data.h
 	}
-	-- self.x, self.y = data.x, data.y
-	-- self.w, self.h = data.w, data.h
+	self.world = data.world
 end;
 
 function Tile:draw()
